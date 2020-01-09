@@ -1,0 +1,30 @@
+#!/bin/bash
+# Create a DataLad dataset for a UKbiobank participant
+#
+# This script takes a minimum of three positional arguments:
+#
+# 1. Path where the dataset shall be created. It must not exist or be an empty
+#    directory.
+# 2. The "encoded ID" of the target participant
+# 3. One (or more) data record IDs
+#
+# A batch file for the `ukbfetch` tool will be generated and placed into the dataset.
+# By selecting the relevant data records, raw and/or preprocessed data will be tracked.
+#
+# Example:
+#
+#  ukb_create_participant_ds ukb_preprocessed/58453415 5874415 20227_2_0 20249_2_0
+#
+
+set -e -u
+
+dspath=$1
+participant_id=$2
+shift;shift;
+datarecords=$@
+
+datalad create "$dspath"
+for d in $datarecords; do
+	echo "$participant_id $d" >> "$dspath/.ukbbatch"
+done
+datalad save -d "$dspath" --to-git -m "Add UKB data fetch configuration" "$dspath/.ukbbatch"

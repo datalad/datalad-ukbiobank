@@ -1,0 +1,54 @@
+#!/bin/bash
+# Update an existing dataset of a UKbiobank participant
+#
+# This script expects a preconfigured DataLad dataset as created by
+# `ukb_create_participant_ds`. It takes two mandatory positional arguments:
+#
+# 1. Path to the dataset to be updated
+# 2. Path to a UKB keyfile for authorizing the download
+#
+# The dataset may or may not have any downloaded content already.
+#
+set -e -u
+
+dspath="$1"
+keyfile="$(readlink -f "$2")"
+
+cd "$dspath"
+
+oldbranch="$(git rev-parse --abbrev-ref HEAD)"
+
+# make sure we are in incoming whether or not the branch existed
+git checkout -b incoming || git checkout incoming
+
+# record current state
+oldcommit=$(git rev-parse incoming)
+
+# download stage, fake for now
+mkdir -p .git/tmp/ukb
+datalad run -m "Update from UKbiobank" --output . ukbfetch -v -a"$keyfile" -b.ukbbatch -o.git/tmp/ukb/fetched.ls
+
+# stop here, if run made no commit
+[ "$oldcommit" = "$(git rev-parse incoming)" ] && git checkout $oldbranch && exit 0
+
+# make sure we are in incoming-processed whether or not the branch existed
+git checkout -b incoming-processed master || git checkout incoming-processed
+
+# figure out the keys of any files that the last commit added/changed
+# 
+for f in $(datalad -f json diff -f incoming^ -t incoming | jq '. | select(.state == "added", .state == "modified") | .path' | tr -d '"'); do 
+	# --use-current-dir due to https://github.com/datalad/datalad/issues/3995
+	datalad add-archive-content \
+		--use-current-dir \
+		--allow-dirty \
+		--no-commit \
+		--key $(basename $(git cat-file -p "incoming:$(basename $f)"))
+done
+datalad save -m "Track ZIP file content"
+
+# and update user-facing branch
+git checkout master
+git merge incoming-processed
+
+# be nice
+git checkout $oldbranch
