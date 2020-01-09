@@ -23,8 +23,29 @@ participant_id=$2
 shift;shift;
 datarecords=$@
 
+# create plain dataset
 datalad create "$dspath"
+
+cd "$dspath"
+
+# establish "incoming" branch that will hold pristine UKB downloads
+git checkout --orphan incoming
+# place batch file with download config for ukbfetch in it
 for d in $datarecords; do
-	echo "$participant_id $d" >> "$dspath/.ukbbatch"
+	echo "$participant_id $d" >> ".ukbbatch"
 done
-datalad save -d "$dspath" --to-git -m "Add UKB data fetch configuration" "$dspath/.ukbbatch"
+# save to incoming branch, provide path to avoid adding untracked content
+# (due to --orphan above)
+datalad save --to-git -m "Add UKB data fetch configuration" ".ukbbatch"
+# establish rest of the branch structure: "incoming-processsed" for extracted
+# archive content
+git checkout -b incoming-processed incoming
+# wipe out batch file to keep download-related info separate
+git rm .ukbbatch
+git commit -m "Do not leak ukbfetch configuration into dataset content" .ukbbatch
+# force merge unrelated histories into master
+# we are using an orphan branch such that we know that `git ls-tree incoming`
+# will only report download-related content, nothing extracted or manually
+# modified
+git checkout master
+git merge -m "Merge incoming branch" --allow-unrelated-histories incoming-processed
