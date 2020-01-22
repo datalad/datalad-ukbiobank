@@ -1,0 +1,3 @@
+[submodule "code/UKBB_scripts"]
+	path = code/UKBB_scripts
+	url = https://github.com/neurodatascience/UKBB_scripts
