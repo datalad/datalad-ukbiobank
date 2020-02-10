@@ -7,6 +7,12 @@ command_suite = (
             'ukb-init',
             'ukb_init',
         ),
+        (
+            'datalad_ukbiobank.update',
+            'Update',
+            'ukb-update',
+            'ukb_update',
+        ),
     ]
 )
 
