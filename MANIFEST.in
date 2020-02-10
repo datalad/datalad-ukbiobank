@@ -1,0 +1,2 @@
+include versioneer.py
+include datalad_ukbiobank/_version.py
