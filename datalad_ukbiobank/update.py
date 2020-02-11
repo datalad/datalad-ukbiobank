@@ -67,11 +67,29 @@ class Update(Interface):
             action='store_true',
             doc="""Flag whether to merge any updates into the active branch
             """),
+        force_update=Parameter(
+            args=('--force-update',),
+            action='store_true',
+            doc="""Flag whether to update the dataset, even if (re-)download
+            did not yield changed content (can be useful when restructuring
+            setup has changed)."""),
+        bids=Parameter(
+            args=('--bids',),
+            action='store_true',
+            doc="""Flag whether to restructure the download into a BIDS-like
+            origanization."""),
+        non_bids_dir=Parameter(
+            args=('--non-bids-dir',),
+            metavar='PATH',
+            doc="""If BIDS restructuring is enabled, relative path of a
+            directory to place all unrecognized files into.""",
+            constraints=EnsureStr() | EnsureNone()),
     )
     @staticmethod
     @datasetmethod(name='ukb_update')
     @eval_results
-    def __call__(keyfile=None, merge=False, dataset=None):
+    def __call__(keyfile=None, merge=False, force_update=False, bids=False,
+                 non_bids_dir='non-bids', dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
@@ -105,8 +123,8 @@ class Update(Interface):
         # make sure we are in incoming
         repo.call_git(['checkout', 'incoming'])
 
-        ## first wipe out all prev. downloaded zip files so we can detect
-        ## when some files are no longer available
+        # first wipe out all prev. downloaded zip files so we can detect
+        # when some files are no longer available
         for zp in repo.pathobj.glob('*.zip'):
             zp.unlink()
 
@@ -128,7 +146,7 @@ class Update(Interface):
         )
 
         # TODO what if something broke before? needs force switch
-        if repo.get_hexsha() == initial_incoming:
+        if not force_update and repo.get_hexsha() == initial_incoming:
             yield dict(
                 res,
                 status='notneeded',
@@ -165,6 +183,19 @@ class Update(Interface):
                 use_current_dir=True,
                 allow_dirty=True,
                 commit=False,
+            )
+
+        if bids:
+            from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
+            # get participant ID from batch file
+            subid = list(repo.call_git_items_(
+                ["cat-file", "-p", "incoming:.ukbbatch"])
+            )[0].split(maxsplit=1)[0]
+
+            yield from restructure_ukb2bids(
+                ds,
+                subid=subid,
+                unrecognized_dir=non_bids_dir,
             )
 
         # save whatever the state is now, `save` will discover deletions
