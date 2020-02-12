@@ -48,7 +48,8 @@ class Init(Interface):
     _examples_ = [
         dict(
             text='Initialize a dataset in the current directory',
-            code_cmd='datalad ukb-init -p 5874415 --record 20227_2_0 20249_2_0'),
+            code_cmd='datalad ukb-init 5874415 20227_2_0 20249_2_0',
+            code_py='ukb-init(participant="5874415", records=["20227_2_0", "20249_2_0"])'),
     ]
 
     _params_ = dict(
@@ -61,8 +62,9 @@ class Init(Interface):
             args=('participant',),
             metavar='PARTICPANT-ID',
             nargs=1,
-            doc="""UKBiobank participant ID (application-specific, encoded ID)
-            to use for this dataset""",
+            doc="""UKBiobank participant ID to use for this dataset
+            (note: these encoded IDs are unique to each
+            application/project)""",
             constraints=EnsureStr()),
         records=Parameter(
             args=('records',),
@@ -72,7 +74,7 @@ class Init(Interface):
             constraints=EnsureStr()),
         force=Parameter(
             args=("-f", "--force",),
-            doc="""enforce (re-)initialization""",
+            doc="""force (re-)initialization""",
             action='store_true'),
     )
     @staticmethod
