@@ -22,7 +22,6 @@ from datalad.support.constraints import (
 )
 from datalad.support.param import Parameter
 from datalad.utils import (
-    ensure_list,
     quote_cmdlinearg,
 )
 
@@ -58,30 +57,30 @@ class Update(Interface):
         keyfile=Parameter(
             args=('-k', '--keyfile',),
             metavar='PATH',
-            doc="""Path to a file with an authentification key
+            doc="""path to a file with an authentification key
             (ukbfetch -a ...). If none is given, the configuration
             datalad.ukbiobank.keyfile is consulted.""",
             constraints=EnsureStr() | EnsureNone()),
         merge=Parameter(
             args=('--merge',),
             action='store_true',
-            doc="""Flag whether to merge any updates into the active branch
+            doc="""merge any updates into the active branch
             """),
         force_update=Parameter(
             args=('--force-update',),
             action='store_true',
-            doc="""Flag whether to update the dataset, even if (re-)download
+            doc="""update the incoming-processed branch, even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
         bids=Parameter(
             args=('--bids',),
             action='store_true',
-            doc="""Flag whether to restructure the download into a BIDS-like
-            origanization."""),
+            doc="""restructure the incoming-processed branch into a BIDS-like
+            organization."""),
         non_bids_dir=Parameter(
             args=('--non-bids-dir',),
             metavar='PATH',
-            doc="""If BIDS restructuring is enabled, relative path of a
+            doc="""if BIDS restructuring is enabled, relative path of a
             directory to place all unrecognized files into.""",
             constraints=EnsureStr() | EnsureNone()),
     )
