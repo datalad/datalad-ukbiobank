@@ -43,6 +43,14 @@ class Init(Interface):
     A batch file for the 'ukbfetch' tool will be generated and placed into the
     dataset. By selecting the relevant data records, raw and/or preprocessed
     data will be tracked.
+
+    After initialization the dataset will contain at least three branches:
+
+    - incoming: to track the pristine ZIP files downloaded from UKB
+    - incoming-processed: to track extracted ZIP file content, in a potentially
+      restructures layout (i.e. BIDS-like file name conventions)
+    - master: based off of incoming-processed with potential manual modifications
+      applied
     """
 
     _examples_ = [
