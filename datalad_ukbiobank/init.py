@@ -57,7 +57,7 @@ class Init(Interface):
         dict(
             text='Initialize a dataset in the current directory',
             code_cmd='datalad ukb-init 5874415 20227_2_0 20249_2_0',
-            code_py='ukb-init(participant="5874415", records=["20227_2_0", "20249_2_0"])'),
+            code_py='ukb_init(participant="5874415", records=["20227_2_0", "20249_2_0"])'),
     ]
 
     _params_ = dict(
