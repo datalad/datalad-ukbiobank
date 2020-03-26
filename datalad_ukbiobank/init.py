@@ -33,7 +33,7 @@ from datalad.distribution.dataset import (
 
 __docformat__ = 'restructuredtext'
 
-lgr = logging.getLogger('datalad_ukbiobank.init')
+lgr = logging.getLogger('datalad.ukbiobank.init')
 
 
 @build_doc

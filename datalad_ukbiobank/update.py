@@ -34,7 +34,7 @@ from datalad.distribution.dataset import (
 
 __docformat__ = 'restructuredtext'
 
-lgr = logging.getLogger('datalad_ukbiobank.update')
+lgr = logging.getLogger('datalad.ukbiobank.update')
 
 
 @build_doc

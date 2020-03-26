@@ -3,7 +3,7 @@ from datalad.utils import Path
 from datalad_ukbiobank.ukb2bids_map import ukb2bids
 
 import logging
-lgr = logging.getLogger('datalad_ukbiobank.ukb2bids')
+lgr = logging.getLogger('datalad.ukbiobank.ukb2bids')
 
 
 def restructure_ukb2bids(ds, subid, unrecognized_dir):
