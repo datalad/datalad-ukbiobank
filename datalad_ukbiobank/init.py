@@ -137,7 +137,7 @@ class Init(Interface):
         ds.save(
             path='.ukbbatch',
             to_git=True,
-            message="Add UKB data fetch configuration",
+            message="Configure UKB data fetch",
             result_renderer=None,
         )
         # establish rest of the branch structure: "incoming-processsed"
@@ -146,7 +146,11 @@ class Init(Interface):
             repo.call_git(['checkout', '-b', 'incoming-processed'])
         else:
             repo.call_git(['checkout', 'incoming-processed'])
-            repo.call_git(['merge', 'incoming'])
+            # the only thing that we changed in 'incoming' is the batchfile
+            # which we will wipe out from 'incoming-processed' below.
+            # use -s ours to avoid merge conflicts due to the deleted
+            # file
+            repo.call_git(['merge', 'incoming', '-s', 'ours'])
         # wipe out batch file to keep download-related info separate
         if batchfile.exists():
             repo.call_git_success(['rm', '-f', '.ukbbatch'])
