@@ -11,6 +11,7 @@
 """
 
 import logging
+import subprocess
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -113,6 +114,18 @@ class Update(Interface):
                 message="Refuse to operate on dirty dataset",
             )
             return
+
+        # check if we have 'ukbfetch' before we start fiddling with the dataset
+        # and leave it in a mess for no reason
+        try:
+            subprocess.run(
+                # pull version info
+                ['ukbfetch', '-i'],
+                capture_output=True,
+            )
+        except Exception as e:
+            raise RuntimeError(
+                "Cannot execute 'ukbfetch'. Original error: {}".format(e))
 
         # just to be nice, and to be able to check it out again,
         # when we are done
