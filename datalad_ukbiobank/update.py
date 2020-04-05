@@ -23,7 +23,9 @@ from datalad.support.constraints import (
 )
 from datalad.support.param import Parameter
 from datalad.utils import (
+    chpwd,
     quote_cmdlinearg,
+    Path,
 )
 
 from datalad.distribution.dataset import (
@@ -81,8 +83,9 @@ class Update(Interface):
         non_bids_dir=Parameter(
             args=('--non-bids-dir',),
             metavar='PATH',
-            doc="""if BIDS restructuring is enabled, relative path of a
-            directory to place all unrecognized files into.""",
+            doc="""if BIDS restructuring is enabled, relative path (to the
+            session directory) of a directory to place all unrecognized files
+            into.""",
             constraints=EnsureStr() | EnsureNone()),
     )
     @staticmethod
@@ -180,23 +183,7 @@ class Update(Interface):
                 eval_file_type=False):
             fp.unlink()
 
-        # discover all zip files present in the last commit in 'incoming'
-        for fp, props in repo.get_content_annexinfo(
-                ref='incoming', eval_availability=False).items():
-            if fp.suffix != '.zip':
-                continue
-            # extract and add their content
-            AddArchiveContent.__call__(
-                props['key'],
-                key=True,
-                annex=repo,
-                # --use-current-dir due to
-                # https://github.com/datalad/datalad/issues/3995
-                use_current_dir=True,
-                allow_dirty=True,
-                commit=False,
-            )
-
+        subid = None
         if bids:
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
             # get participant ID from batch file
@@ -204,11 +191,40 @@ class Update(Interface):
                 ["cat-file", "-p", "incoming:.ukbbatch"])
             )[0].split(maxsplit=1)[0]
 
-            yield from restructure_ukb2bids(
-                ds,
-                subid=subid,
-                unrecognized_dir=non_bids_dir,
-            )
+        # discover all zip files present in the last commit in 'incoming'
+        for fp, props in repo.get_content_annexinfo(
+                ref='incoming', eval_availability=False).items():
+            if fp.suffix != '.zip':
+                continue
+            # we have to extract into per-instance directories, otherwise files
+            # would conflict
+            ids = fp.stem.split('_')
+            if not len(ids) >= 3:
+                raise RuntimeError('Unrecognized filename structure: {}'.format(fp))
+            extract_dir = repo.pathobj / 'instance-{}'.format(ids[2])
+            extract_dir.mkdir(exist_ok=True)
+
+            with chpwd(extract_dir):
+                # extract and add their content
+                AddArchiveContent.__call__(
+                    props['key'],
+                    key=True,
+                    annex=repo,
+                    # --use-current-dir due to
+                    # https://github.com/datalad/datalad/issues/3995
+                    use_current_dir=True,
+                    allow_dirty=True,
+                    commit=False,
+                )
+
+            if bids:
+                yield from restructure_ukb2bids(
+                    ds,
+                    subid=subid,
+                    unrecognized_dir=Path('ses-{}'.format(ids[2])) / non_bids_dir,
+                    base_path=extract_dir,
+                    session=ids[2],
+                )
 
         # save whatever the state is now, `save` will discover deletions
         # automatically and also commit them -- wonderful!

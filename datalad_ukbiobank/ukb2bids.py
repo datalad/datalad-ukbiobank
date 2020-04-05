@@ -6,7 +6,8 @@ import logging
 lgr = logging.getLogger('datalad_ukbiobank.ukb2bids')
 
 
-def restructure_ukb2bids(ds, subid, unrecognized_dir):
+def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
+                         session=None):
     """Perform the necessary renames to restructure to BIDS
 
     Parameters
@@ -20,6 +21,11 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir):
       Name of a directory to put all unrecognized files into. The given
       value is used to populate the 'unrecogdir' substitution label
       in `ukb2bids_map`. If None, unrecognized files will not be moved.
+    base_path : Path-like
+      Base path to determine relative path names of any file for BIDS
+      mapping
+    session : str
+      Session label for BIDS mapping
     """
     # shortcut
     repo = ds.repo
@@ -34,13 +40,14 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir):
 
     # loop over all known files
     for fp in ds.status(
+            path=base_path,
             annex=None,
             untracked='no',
             eval_subdataset_state='no',
             report_filetype='raw',
             return_type='generator',
             result_renderer=None):
-        relpath = Path(fp['path']).relative_to(ds.pathobj)
+        relpath = Path(fp['path']).relative_to(base_path or ds.pathobj)
         rp_parts = relpath.parts
         if rp_parts[0].startswith(('.git', '.datalad')):
             # ignore internal data structures
@@ -73,6 +80,7 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir):
                 # apply substitutions
                 target_path = target_path.format(
                     subj=subid,
+                    session='ses-{}'.format(session) if session else '',
                     unrecogdir='@@UNRECOG@@'
                     if unrecognized_dir is None else unrecognized_dir,
                 )
@@ -87,6 +95,15 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir):
             continue
         full_sourcepath = Path(fp['path'])
         full_targetpath = ds.pathobj / target_path
+        if full_targetpath.exists():
+            yield dict(
+                res,
+                path=fp['path'],
+                status='error',
+                message=('Target path %s already exists (naming conflict?)',
+                         target_path)
+            )
+            continue
         # ensure target directory
         full_targetpath.parent.mkdir(parents=True, exist_ok=True)
         full_sourcepath.rename(full_targetpath)
