@@ -47,6 +47,10 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
             report_filetype='raw',
             return_type='generator',
             result_renderer=None):
+        path = Path(fp['path'])
+        if not path.exists():
+            lgr.debug('Skip mapping %s, no longer exists (likely moved before)', path)
+            continue
         relpath = Path(fp['path']).relative_to(base_path or ds.pathobj)
         rp_parts = relpath.parts
         if rp_parts[0].startswith(('.git', '.datalad')):
