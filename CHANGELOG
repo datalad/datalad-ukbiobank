@@ -1,3 +1,19 @@
+0.2 (Apr ??, 2020) -- multi-utility
+
+- Support for multi-instance data records (i.e. imaging data from multiple
+  visits). Data is now organized into `instance-?/` subdirectories, where `?`
+  is the instance ID (e.g. 2 or 3). In BIDS layout the same IDs are used as
+  'session' identifiers. Data are now unconditionally grouped by
+  instance/session, even if no multi-instance data is present yet, in order to
+  improve forward-compatibility with future UKB updates.
+
+- Availability of `ukbfetch` is now tested at the start of `ukb-update` to
+  prevent a dirty crash during processing.
+
+- Prevent crash of `ukb-init` with a diffent set of record IDs.
+
+- Fix log setup to make user-targeted messages visible.
+
 0.1 (Feb 13, 2020) -- don't touch this
 
 - Initial draft implementation
