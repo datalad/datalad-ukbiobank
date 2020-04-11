@@ -1,4 +1,4 @@
-0.2 (Apr ??, 2020) -- multi-utility
+0.2 (Apr 11, 2020) -- multi-utility
 
 - Support for multi-instance data records (i.e. imaging data from multiple
   visits). Data is now organized into `instance-?/` subdirectories, where `?`
@@ -10,7 +10,7 @@
 - Availability of `ukbfetch` is now tested at the start of `ukb-update` to
   prevent a dirty crash during processing.
 
-- Prevent crash of `ukb-init` with a diffent set of record IDs.
+- Prevent crash of `ukb-init` with a different set of record IDs.
 
 - Fix log setup to make user-targeted messages visible.
 
