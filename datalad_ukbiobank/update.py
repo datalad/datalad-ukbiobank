@@ -140,8 +140,8 @@ class Update(Interface):
 
         # first wipe out all prev. downloaded zip files so we can detect
         # when some files are no longer available
-        for zp in repo.pathobj.glob('*.zip'):
-            zp.unlink()
+        for fp in repo.pathobj.glob('[0-9]*_[0-9]*_[0-9]_[0-9].*'):
+            fp.unlink()
 
         # a place to put the download logs
         # better be semi-persistent to ease inspection
