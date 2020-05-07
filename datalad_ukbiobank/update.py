@@ -12,6 +12,7 @@
 
 import logging
 import subprocess
+import shutil
 
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
@@ -194,7 +195,8 @@ class Update(Interface):
         # discover all zip files present in the last commit in 'incoming'
         for fp, props in repo.get_content_annexinfo(
                 ref='incoming', eval_availability=False).items():
-            if fp.suffix != '.zip':
+            if fp.name.startswith('.'):
+                # skip internals
                 continue
             # we have to extract into per-instance directories, otherwise files
             # would conflict
@@ -204,18 +206,26 @@ class Update(Interface):
             extract_dir = repo.pathobj / 'instance-{}'.format(ids[2])
             extract_dir.mkdir(exist_ok=True)
 
-            with chpwd(extract_dir):
-                # extract and add their content
-                AddArchiveContent.__call__(
-                    props['key'],
-                    key=True,
-                    annex=repo,
-                    # --use-current-dir due to
-                    # https://github.com/datalad/datalad/issues/3995
-                    use_current_dir=True,
-                    allow_dirty=True,
-                    commit=False,
-                )
+            if fp.suffix == '.zip':
+                with chpwd(extract_dir):
+                    # extract and add their content
+                    AddArchiveContent.__call__(
+                        props['key'],
+                        key=True,
+                        annex=repo,
+                        # --use-current-dir due to
+                        # https://github.com/datalad/datalad/issues/3995
+                        use_current_dir=True,
+                        allow_dirty=True,
+                        commit=False,
+                    )
+            else:
+                # move into instance dir, and strip participant ID, and instance ID
+                # but keep array index
+                # e.g. -> 25747_3_0.adv -> instance-3/25747_0
+                repo.call_git([
+                    'annex', 'fromkey', props['key'],
+                    str(extract_dir / ('_'.join(ids[1::2]) + ''.join(fp.suffixes)))])
 
             if bids:
                 yield from restructure_ukb2bids(
