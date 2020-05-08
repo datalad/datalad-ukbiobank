@@ -37,6 +37,12 @@ a dedicated [virtualenv](https://virtualenv.pypa.io):
     # install from PyPi
     pip install datalad_ukbiobank
 
+## Use with pre-downloaded data
+
+Re-download can be avoided (while maintaining all other functionality), if the
+`ukbfetch` utility is replaced by a shim that obtains the relevant files from
+where they have been downloaded to. An example script is provided at
+`tools/ukbfetch_surrogate.sh`.
 
 ## Support
 
