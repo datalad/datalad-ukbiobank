@@ -51,26 +51,29 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
         if not path.exists():
             lgr.debug('Skip mapping %s, no longer exists (likely moved before)', path)
             continue
-        relpath = Path(fp['path']).relative_to(base_path or ds.pathobj)
-        rp_parts = relpath.parts
+        rp_parts = list(Path(fp['path']).relative_to(base_path or ds.pathobj).parts)
         if rp_parts[0].startswith(('.git', '.datalad')):
             # ignore internal data structures
             continue
+        # pull out instance number from the top-level component, because the matching
+        # is uniform and agnostic of instances
+        rp_parts[0] = '_'.join(rp_parts[0].split('_')[::2])
+        fname = Path(rp_parts[-1])
         # build a list of candidate mapping to try, and suffixes to reappend
         # upon a successful match
         cands = [
             # full thing
-            (str(relpath), ''),
+            (str(Path(*rp_parts)), ''),
             # without suffix(es)
             (str(Path(
-                relpath.parent,
-                relpath.name[:-sum(len(s) for s in relpath.suffixes)])),
-             ''.join(relpath.suffixes)),
+                *rp_parts[:-1],
+                fname.name[:-sum(len(s) for s in fname.suffixes)])),
+             ''.join(fname.suffixes)),
         ]
         # all intermediate path components
         cands += reversed([
             (str(Path(*rp_parts[:i + 1])),
-             Path(*rp_parts[i + 1:]))
+             str(Path(*rp_parts[i + 1:])))
             for i in range(len(rp_parts) - 1)
         ])
         for pattern, suffix in cands:
