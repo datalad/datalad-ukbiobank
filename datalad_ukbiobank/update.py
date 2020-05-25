@@ -154,7 +154,9 @@ class Update(Interface):
         ds.run(
             cmd='ukbfetch -v -a{} -b.ukbbatch -o{}'.format(
                 quote_cmdlinearg(keyfile),
-                quote_cmdlinearg(str(tmpdir)),
+                # use relative path to tmpdir to avoid leakage
+                # of system-specific information into the run record
+                quote_cmdlinearg(str(tmpdir.relative_to(repo.pathobj))),
             ),
             explicit=True,
             outputs=['.'],
