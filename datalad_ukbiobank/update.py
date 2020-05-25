@@ -125,7 +125,8 @@ class Update(Interface):
             subprocess.run(
                 # pull version info
                 ['ukbfetch', '-i'],
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
         except Exception as e:
             raise RuntimeError(
