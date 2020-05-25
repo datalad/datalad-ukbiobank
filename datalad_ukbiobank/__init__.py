@@ -19,3 +19,8 @@ command_suite = (
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
+
+
+# adopt standard datalad test setup
+from datalad import setup_package
+from datalad import teardown_package
