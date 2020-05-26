@@ -1,6 +1,6 @@
 # DataLad extension for working with the UKbiobank
 
-[![GitHub release](https://img.shields.io/github/release/datalad/ukbiobank.svg)](https://GitHub.com/datalad/ukbiobank/releases/) [![PyPI version fury.io](https://badge.fury.io/py/ukbiobank.svg)](https://pypi.python.org/pypi/ukbiobank/)
+[![GitHub release](https://img.shields.io/github/release/datalad/ukbiobank.svg)](https://GitHub.com/datalad/ukbiobank/releases/) [![PyPI version fury.io](https://badge.fury.io/py/ukbiobank.svg)](https://pypi.python.org/pypi/ukbiobank/) [![Travis tests status](https://secure.travis-ci.org/datalad/datalad-ukbiobank.png?branch=master)](https://travis-ci.org/datalad/datalad-ukbiobank) [![codecov.io](https://codecov.io/github/datalad/datalad-ukbiobank/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-ukbiobank?branch=master)
 
 This software is a [DataLad](http://datalad.org) extension that equips DataLad
 with a set of commands to obtain (and monitor) imaging data releases of the
