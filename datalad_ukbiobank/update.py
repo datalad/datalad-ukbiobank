@@ -206,10 +206,12 @@ class Update(Interface):
             ids = fp.stem.split('_')
             if not len(ids) >= 3:
                 raise RuntimeError('Unrecognized filename structure: {}'.format(fp))
-            extract_dir = repo.pathobj / 'instance-{}'.format(ids[2])
-            extract_dir.mkdir(exist_ok=True)
+            # build an ID from the data record and the array index
+            rec_id = '_'.join(ids[1:])
 
             if fp.suffix == '.zip':
+                extract_dir = repo.pathobj / rec_id
+                extract_dir.mkdir(exist_ok=True)
                 with chpwd(extract_dir):
                     # extract and add their content
                     AddArchiveContent.__call__(
@@ -228,14 +230,14 @@ class Update(Interface):
                 # e.g. -> 25747_3_0.adv -> instance-3/25747_0
                 repo.call_git([
                     'annex', 'fromkey', props['key'],
-                    str(extract_dir / ('_'.join(ids[1::2]) + ''.join(fp.suffixes)))])
+                    str(repo.pathobj / (rec_id + ''.join(fp.suffixes)))])
 
             if bids:
                 yield from restructure_ukb2bids(
                     ds,
                     subid=subid,
                     unrecognized_dir=Path('ses-{}'.format(ids[2])) / non_bids_dir,
-                    base_path=extract_dir,
+                    base_path=repo.pathobj,
                     session=ids[2],
                 )
 
