@@ -192,15 +192,7 @@ class Update(Interface):
                 eval_file_type=False):
             fp.unlink()
 
-        subid = None
-        if bids:
-            from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
-            # get participant ID from batch file
-            subid = list(repo.call_git_items_(
-                ["cat-file", "-p", "incoming:.ukbbatch"])
-            )[0].split(maxsplit=1)[0]
-
-        # discover all zip files present in the last commit in 'incoming'
+        # discover all files present in the last commit in 'incoming'
         for fp, props in repo.get_content_annexinfo(
                 ref='incoming', eval_availability=False).items():
             if fp.name.startswith('.'):
@@ -237,14 +229,19 @@ class Update(Interface):
                     'annex', 'fromkey', props['key'],
                     str(repo.pathobj / (rec_id + ''.join(fp.suffixes)))])
 
-            if bids:
-                yield from restructure_ukb2bids(
-                    ds,
-                    subid=subid,
-                    unrecognized_dir=Path('ses-{}'.format(ids[2])) / non_bids_dir,
-                    base_path=repo.pathobj,
-                    session=ids[2],
-                )
+        if bids:
+            from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
+            # get participant ID from batch file
+            subid = list(repo.call_git_items_(
+                ["cat-file", "-p", "incoming:.ukbbatch"])
+            )[0].split(maxsplit=1)[0]
+
+            yield from restructure_ukb2bids(
+                ds,
+                subid=subid,
+                unrecognized_dir=non_bids_dir,
+                base_path=repo.pathobj,
+            )
 
         # save whatever the state is now, `save` will discover deletions
         # automatically and also commit them -- wonderful!
