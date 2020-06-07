@@ -6,7 +6,9 @@ from datalad.api import (
     create,
 )
 from datalad.tests.utils import (
+    assert_in,
     assert_in_results,
+    assert_not_in,
     assert_raises,
     assert_status,
     with_tempfile,
@@ -72,7 +74,16 @@ def test_dummy(dspath, records):
             os.environ['PATH'])}):
         ds.ukb_update(merge=True)
 
-    # TODO add actual checks
+    # get expected file layout
+    incoming = ds.repo.get_files('incoming')
+    incoming_p = ds.repo.get_files('incoming-processed')
+    for i in ['12345_25748_2_0.txt', '12345_25748_3_0.txt', '12345_20227_2_0.zip']:
+        assert_in(i, incoming)
+    for i in ['25748_2_0.txt', '25748_3_0.txt', '20227_2_0/fMRI/rfMRI.nii.gz']:
+        assert_in(i, incoming_p)
+    # not ZIPs after processing
+    assert_not_in('12345_20227_2_0.zip', incoming_p)
+    assert_not_in('20227_2_0.zip', incoming_p)
 
     # rerun works
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
