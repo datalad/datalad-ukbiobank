@@ -68,7 +68,10 @@ class Update(Interface):
         merge=Parameter(
             args=('--merge',),
             action='store_true',
-            doc="""merge any updates into the active branch
+            doc="""merge any updates into the active branch. If a BIDS layout
+            is maintained in the dataset (incoming-bids branch) it will be
+            merged into the active branch, the incoming-processed branch
+            otherwise.
             """),
         force_update=Parameter(
             args=('--force-update',),
@@ -76,24 +79,11 @@ class Update(Interface):
             doc="""update the incoming-processed branch, even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
-        bids=Parameter(
-            args=('--bids',),
-            action='store_true',
-            doc="""restructure the incoming-processed branch into a BIDS-like
-            organization."""),
-        non_bids_dir=Parameter(
-            args=('--non-bids-dir',),
-            metavar='PATH',
-            doc="""if BIDS restructuring is enabled, relative path (to the
-            session directory) of a directory to place all unrecognized files
-            into.""",
-            constraints=EnsureStr() | EnsureNone()),
     )
     @staticmethod
     @datasetmethod(name='ukb_update')
     @eval_results
-    def __call__(keyfile=None, merge=False, force_update=False, bids=False,
-                 non_bids_dir='non-bids', dataset=None):
+    def __call__(keyfile=None, merge=False, force_update=False, dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
@@ -229,7 +219,27 @@ class Update(Interface):
                     'annex', 'fromkey', props['key'],
                     str(repo.pathobj / (rec_id + ''.join(fp.suffixes)))])
 
-        if bids:
+        # save whatever the state is now, `save` will discover deletions
+        # automatically and also commit them -- wonderful!
+        ds.save(message="Track ZIP file content")
+        yield dict(
+            res,
+            status='ok',
+        )
+
+        want_bids = 'incoming-bids' in repo.get_branches()
+        if want_bids:
+            repo.call_git(['checkout', 'incoming-bids'])
+            # we do not support any external modifications of this
+            # incoming-bids branch
+            # first wipe all previously existing content
+            for fp in repo.get_files():
+                (repo.pathobj / fp).unlink()
+            # blindly take over whatever is in incoming-processed
+            repo.call_git([
+                'merge', 'incoming-processed',
+                '-s', 'recursive', '-X', 'theirs'])
+
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
             # get participant ID from batch file
             subid = list(repo.call_git_items_(
@@ -239,17 +249,10 @@ class Update(Interface):
             yield from restructure_ukb2bids(
                 ds,
                 subid=subid,
-                unrecognized_dir=non_bids_dir,
+                unrecognized_dir='non-bids',
                 base_path=repo.pathobj,
             )
-
-        # save whatever the state is now, `save` will discover deletions
-        # automatically and also commit them -- wonderful!
-        ds.save(message="Track ZIP file content")
-        yield dict(
-            res,
-            status='ok',
-        )
+            ds.save(message="Establish BIDS layout")
 
         if not merge:
             return
@@ -257,7 +260,9 @@ class Update(Interface):
         # and update active branch
         repo.call_git(['checkout', initial_branch])
 
-        if initial_branch in ('incoming', 'incoming-processed'):
+        if initial_branch in ('incoming',
+                              'incoming-processed',
+                              'incoming-bids'):
             yield dict(
                 res,
                 action='ukb_merge_update',
@@ -269,7 +274,7 @@ class Update(Interface):
         repo.call_git([
             'merge',
             '-m', "Merge update from UKbiobank",
-            'incoming-processed'])
+            'incoming-bids' if want_bids else 'incoming-processed'])
 
         yield dict(
             res,

@@ -84,11 +84,17 @@ class Init(Interface):
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
             action='store_true'),
+        bids=Parameter(
+            args=('--bids',),
+            action='store_true',
+            doc="""additionally maintain an incoming-bids branch with a
+            BIDS-like organization."""),
     )
     @staticmethod
     @datasetmethod(name='ukb_init')
     @eval_results
-    def __call__(participant, records, force=False, dataset=None):
+    def __call__(participant, records, force=False, bids=False,
+                 dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
 
@@ -157,6 +163,16 @@ class Init(Interface):
             repo.commit(
                 files=['.ukbbatch'],
                 msg="Do not leak ukbfetch configuration into dataset content")
+        if bids:
+            if 'incoming-bids' not in branches:
+                repo.call_git(['checkout', '-b', 'incoming-bids'])
+            else:
+                repo.call_git(['checkout', 'incoming-bids'])
+                # a reinit cannot create any change that would (need to)
+                # reach the bids branch, just merge to make things
+                # uptodate, while avoiding any potential conflicts
+                # (although there should be none)
+                repo.call_git(['merge', 'incoming', '-s', 'ours'])
         # force merge unrelated histories into master
         # we are using an orphan branch such that we know that
         # `git ls-tree incoming`
@@ -167,7 +183,7 @@ class Init(Interface):
             'merge',
             '-m', 'Merge incoming',
             '--allow-unrelated-histories',
-            'incoming-processed',
+            'incoming-bids' if bids else 'incoming-processed',
         ])
 
         yield dict(
