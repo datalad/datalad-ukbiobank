@@ -6,6 +6,11 @@ from datalad.api import (
     create,
 )
 from datalad.tests.utils import (
+    assert_in,
+    assert_in_results,
+    assert_not_in,
+    assert_raises,
+    assert_status,
     with_tempfile,
 )
 from datalad_ukbiobank.tests import (
@@ -55,10 +60,43 @@ def test_dummy(dspath, records):
     )
     ukbfetch_file.chmod(0o744)
 
+    # refuse to operate on dirty datasets
+    (ds.pathobj / 'dirt').write_text('dust')
+    assert_status('error', ds.ukb_update(on_failure='ignore'))
+    (ds.pathobj / 'dirt').unlink()
+
+    # meaningful crash with no ukbfetch
+    assert_raises(RuntimeError, ds.ukb_update)
+
     # put fake ukbfetch in the path and run
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update()
+        ds.ukb_update(merge=True)
 
-    # add actual checks
+    # get expected file layout
+    incoming = ds.repo.get_files('incoming')
+    incoming_p = ds.repo.get_files('incoming-processed')
+    for i in ['12345_25748_2_0.txt', '12345_25748_3_0.txt', '12345_20227_2_0.zip']:
+        assert_in(i, incoming)
+    for i in ['25748_2_0.txt', '25748_3_0.txt', '20227_2_0/fMRI/rfMRI.nii.gz']:
+        assert_in(i, incoming_p)
+    # not ZIPs after processing
+    assert_not_in('12345_20227_2_0.zip', incoming_p)
+    assert_not_in('20227_2_0.zip', incoming_p)
+
+    # rerun works
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True)
+
+    # rightfully refuse to merge when active branch is an incoming* one
+    ds.repo.checkout('incoming')
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        assert_in_results(
+            ds.ukb_update(merge=True, force_update=True, on_failure='ignore'),
+            status='impossible',
+            message='Refuse to merge into incoming* branch',)
