@@ -100,7 +100,12 @@ class Update(Interface):
         repo = ds.repo
         if not keyfile:
             # will error out, if no config was given
-            keyfile = repo.config.obtain('datalad.ukbiobank.keyfile')
+            keyfile = repo.config.obtain(
+                'datalad.ukbiobank.keyfile',
+                dialog_type='question',
+                title='Key file location',
+                text='Where is the location of the file with the UKB access key?',
+            )
 
         # prep for yield
         res = dict(
