@@ -6,6 +6,9 @@ from datalad.api import (
     create,
 )
 from datalad.tests.utils import (
+    assert_in_results,
+    assert_raises,
+    assert_status,
     with_tempfile,
 )
 from datalad_ukbiobank.tests import (
@@ -55,10 +58,34 @@ def test_dummy(dspath, records):
     )
     ukbfetch_file.chmod(0o744)
 
+    # refuse to operate on dirty datasets
+    (ds.pathobj / 'dirt').write_text('dust')
+    assert_status('error', ds.ukb_update(on_failure='ignore'))
+    (ds.pathobj / 'dirt').unlink()
+
+    # meaningful crash with no ukbfetch
+    assert_raises(RuntimeError, ds.ukb_update)
+
     # put fake ukbfetch in the path and run
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update()
+        ds.ukb_update(merge=True)
 
-    # add actual checks
+    # TODO add actual checks
+
+    # rerun works
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True)
+
+    # rightfully refuse to merge when active branch is an incoming* one
+    ds.repo.checkout('incoming')
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        assert_in_results(
+            ds.ukb_update(merge=True, force_update=True, on_failure='ignore'),
+            status='impossible',
+            message='Refuse to merge into incoming* branch',)
