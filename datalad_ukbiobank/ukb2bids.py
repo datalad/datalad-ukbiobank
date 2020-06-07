@@ -6,8 +6,7 @@ import logging
 lgr = logging.getLogger('datalad.ukbiobank.ukb2bids')
 
 
-def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
-                         session=None):
+def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
     """Perform the necessary renames to restructure to BIDS
 
     Parameters
@@ -21,11 +20,10 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
       Name of a directory to put all unrecognized files into. The given
       value is used to populate the 'unrecogdir' substitution label
       in `ukb2bids_map`. If None, unrecognized files will not be moved.
+      The directory will be placed inside the respective session directory.
     base_path : Path-like
       Base path to determine relative path names of any file for BIDS
       mapping
-    session : str
-      Session label for BIDS mapping
     """
     # shortcut
     repo = ds.repo
@@ -55,6 +53,8 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
         if rp_parts[0].startswith(('.git', '.datalad')):
             # ignore internal data structures
             continue
+        # instance number will serve as BIDS session
+        session = rp_parts[0].split('_')[1]
         # pull out instance number from the top-level component, because the matching
         # is uniform and agnostic of instances
         rp_parts[0] = '_'.join(rp_parts[0].split('_')[::2])
@@ -87,9 +87,10 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None,
                 # apply substitutions
                 target_path = target_path.format(
                     subj=subid,
-                    session='ses-{}'.format(session) if session else '',
+                    session='ses-{}'.format(session),
                     unrecogdir='@@UNRECOG@@'
-                    if unrecognized_dir is None else unrecognized_dir,
+                    if unrecognized_dir is None
+                    else Path('ses-{}'.format(session)) / unrecognized_dir,
                 )
                 break
         if target_path is None or '@@UNRECOG@@' in target_path:
