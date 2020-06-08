@@ -40,7 +40,7 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
     for fp in ds.status(
             path=base_path,
             annex=None,
-            untracked='no',
+            untracked='all',
             eval_subdataset_state='no',
             report_filetype='raw',
             return_type='generator',
@@ -50,11 +50,12 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
             lgr.debug('Skip mapping %s, no longer exists (likely moved before)', path)
             continue
         rp_parts = list(Path(fp['path']).relative_to(base_path or ds.pathobj).parts)
-        if rp_parts[0].startswith(('.git', '.datalad')):
-            # ignore internal data structures
-            continue
         # instance number will serve as BIDS session
-        session = rp_parts[0].split('_')[1]
+        try:
+            session = rp_parts[0].split('_')[1]
+        except IndexError:
+            # ignore anything that doesn't look like a UKB data record
+            continue
         # pull out instance number from the top-level component, because the matching
         # is uniform and agnostic of instances
         rp_parts[0] = '_'.join(rp_parts[0].split('_')[::2])
@@ -104,16 +105,11 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
         full_sourcepath = Path(fp['path'])
         full_targetpath = ds.pathobj / target_path
         if full_targetpath.exists():
-            yield dict(
-                res,
-                path=fp['path'],
-                status='error',
-                message=('Target path %s already exists (naming conflict?)',
-                         target_path)
-            )
-            continue
-        # ensure target directory
-        full_targetpath.parent.mkdir(parents=True, exist_ok=True)
+            lgr.info('Overwriting %s', str(target_path))
+            target_path.unlink()
+        else:
+            # ensure target directory
+            full_targetpath.parent.mkdir(parents=True, exist_ok=True)
         full_sourcepath.rename(full_targetpath)
         # delete empty source directories
         for p in full_sourcepath.parents:

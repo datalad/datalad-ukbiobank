@@ -47,10 +47,12 @@ class Init(Interface):
     After initialization the dataset will contain at least three branches:
 
     - incoming: to track the pristine ZIP files downloaded from UKB
-    - incoming-processed: to track extracted ZIP file content, in a potentially
-      restructures layout (i.e. BIDS-like file name conventions)
-    - master: based off of incoming-processed with potential manual modifications
-      applied
+    - incoming-native: to track individual files (some extracted from ZIP
+      files)
+    - incoming-bids: to track individual files in a layout where file name
+      conform to BIDS-conventions
+    - master: based off of incoming-native or incoming-bids (if enabled)
+      with potential manual modifications applied
     """
 
     _examples_ = [
@@ -58,6 +60,10 @@ class Init(Interface):
             text='Initialize a dataset in the current directory',
             code_cmd='datalad ukb-init 5874415 20227_2_0 20249_2_0',
             code_py='ukb_init(participant="5874415", records=["20227_2_0", "20249_2_0"])'),
+        dict(
+            text='Initialize a dataset in the current directory in BIDS layout',
+            code_cmd='datalad ukb-init --bids 5874415 20227_2_0',
+            code_py='ukb_init(participant="5874415", records=["20227_2_0"], bids=True)'),
     ]
 
     _params_ = dict(
@@ -84,11 +90,17 @@ class Init(Interface):
             args=("-f", "--force",),
             doc="""force (re-)initialization""",
             action='store_true'),
+        bids=Parameter(
+            args=('--bids',),
+            action='store_true',
+            doc="""additionally maintain an incoming-bids branch with a
+            BIDS-like organization."""),
     )
     @staticmethod
     @datasetmethod(name='ukb_init')
     @eval_results
-    def __call__(participant, records, force=False, dataset=None):
+    def __call__(participant, records, force=False, bids=False,
+                 dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='initialization')
 
@@ -142,21 +154,9 @@ class Init(Interface):
         )
         # establish rest of the branch structure: "incoming-processsed"
         # for extracted archive content
-        if 'incoming-processed' not in branches:
-            repo.call_git(['checkout', '-b', 'incoming-processed'])
-        else:
-            repo.call_git(['checkout', 'incoming-processed'])
-            # the only thing that we changed in 'incoming' is the batchfile
-            # which we will wipe out from 'incoming-processed' below.
-            # use -s ours to avoid merge conflicts due to the deleted
-            # file
-            repo.call_git(['merge', 'incoming', '-s', 'ours'])
-        # wipe out batch file to keep download-related info separate
-        if batchfile.exists():
-            repo.call_git_success(['rm', '-f', '.ukbbatch'])
-            repo.commit(
-                files=['.ukbbatch'],
-                msg="Do not leak ukbfetch configuration into dataset content")
+        _add_incoming_branch('incoming-native', branches, repo, batchfile)
+        if bids:
+            _add_incoming_branch('incoming-bids', branches, repo, batchfile)
         # force merge unrelated histories into master
         # we are using an orphan branch such that we know that
         # `git ls-tree incoming`
@@ -167,7 +167,7 @@ class Init(Interface):
             'merge',
             '-m', 'Merge incoming',
             '--allow-unrelated-histories',
-            'incoming-processed',
+            'incoming-bids' if bids else 'incoming-native',
         ])
 
         yield dict(
@@ -177,3 +177,21 @@ class Init(Interface):
             records=records,
         )
         return
+
+
+def _add_incoming_branch(name, branches, repo, batchfile):
+    if name not in branches:
+        repo.call_git(['checkout', '-b', name])
+    else:
+        repo.call_git(['checkout', name])
+        # the only thing that we changed in 'incoming' is the batchfile
+        # which we will wipe out from 'incoming-processed' below.
+        # use -s ours to avoid merge conflicts due to the deleted
+        # file
+        repo.call_git(['merge', 'incoming', '-s', 'ours'])
+    # wipe out batch file to keep download-related info separate
+    if batchfile.exists():
+        repo.call_git_success(['rm', '-f', '.ukbbatch'])
+        repo.commit(
+            files=['.ukbbatch'],
+            msg="Do not leak ukbfetch configuration into dataset content")

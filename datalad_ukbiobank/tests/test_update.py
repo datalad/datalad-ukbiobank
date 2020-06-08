@@ -34,9 +34,24 @@ for line in open('.ukbbatch'):
 """
 
 
+def make_ukbfetch(ds, records):
+    # fake ukbfetch
+    bin_dir = ds.pathobj / '.git' / 'tmp'
+    bin_dir.mkdir()
+    ukbfetch_file = bin_dir / 'ukbfetch'
+    ukbfetch_file.write_text(
+        ukbfetch_code.format(
+            pythonexec=sys.executable,
+            basepath=records,
+        )
+    )
+    ukbfetch_file.chmod(0o744)
+    return bin_dir
+
+
 @with_tempfile
 @with_tempfile(mkdir=True)
-def test_dummy(dspath, records):
+def test_base(dspath, records):
     # make fake UKB datarecord downloads
     make_datarecord_zips('12345', records)
 
@@ -49,16 +64,7 @@ def test_dummy(dspath, records):
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
 
     # fake ukbfetch
-    bin_dir = ds.pathobj / '.git' / 'tmp'
-    bin_dir.mkdir()
-    ukbfetch_file = bin_dir / 'ukbfetch'
-    ukbfetch_file.write_text(
-        ukbfetch_code.format(
-            pythonexec=sys.executable,
-            basepath=records,
-        )
-    )
-    ukbfetch_file.chmod(0o744)
+    bin_dir = make_ukbfetch(ds, records)
 
     # refuse to operate on dirty datasets
     (ds.pathobj / 'dirt').write_text('dust')
@@ -76,7 +82,7 @@ def test_dummy(dspath, records):
 
     # get expected file layout
     incoming = ds.repo.get_files('incoming')
-    incoming_p = ds.repo.get_files('incoming-processed')
+    incoming_p = ds.repo.get_files('incoming-native')
     for i in ['12345_25748_2_0.txt', '12345_25748_3_0.txt', '12345_20227_2_0.zip']:
         assert_in(i, incoming)
     for i in ['25748_2_0.txt', '25748_3_0.txt', '20227_2_0/fMRI/rfMRI.nii.gz']:
@@ -100,3 +106,58 @@ def test_dummy(dspath, records):
             ds.ukb_update(merge=True, force_update=True, on_failure='ignore'),
             status='impossible',
             message='Refuse to merge into incoming* branch',)
+
+
+@with_tempfile
+@with_tempfile(mkdir=True)
+def test_bids(dspath, records):
+    # make fake UKB datarecord downloads
+    make_datarecord_zips('12345', records)
+
+    # init dataset
+    ds = create(dspath)
+    ds.ukb_init(
+        '12345',
+        ['20227_2_0', '25747_2_0.adv', '25748_2_0', '25748_3_0'],
+        bids=True)
+    # dummy key file, no needed to bypass tests
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    bin_dir = make_ukbfetch(ds, records)
+
+    # put fake ukbfetch in the path and run
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True)
+
+    bids_files = ds.repo.get_files('incoming-bids')
+    master_files = ds.repo.get_files()
+    for i in [
+            'ses-2/func/sub-12345_ses-2_task-rest_bold.nii.gz',
+            'ses-2/non-bids/fMRI/sub-12345_ses-2_task-hariri_eprime.txt',
+            'ses-3/non-bids/fMRI/sub-12345_ses-3_task-hariri_eprime.txt']:
+        assert_in(i, bids_files)
+        assert_in(i, master_files)
+
+    # run again, nothing bad happens
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force_update=True)
+
+    bids_files = ds.repo.get_files('incoming-bids')
+    master_files = ds.repo.get_files()
+    for i in [
+            'ses-2/func/sub-12345_ses-2_task-rest_bold.nii.gz',
+            'ses-2/non-bids/fMRI/sub-12345_ses-2_task-hariri_eprime.txt',
+            'ses-3/non-bids/fMRI/sub-12345_ses-3_task-hariri_eprime.txt']:
+        assert_in(i, bids_files)
+        assert_in(i, master_files)
+
+    # now re-init with a different record subset and rerun
+    ds.ukb_init('12345', ['25747_2_0.adv', '25748_2_0', '25748_3_0'],
+                bids=True, force=True)
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force_update=True)

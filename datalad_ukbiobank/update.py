@@ -23,6 +23,7 @@ from datalad.support.constraints import (
     EnsureNone,
 )
 from datalad.support.param import Parameter
+from datalad.support.exceptions import CommandError
 from datalad.utils import (
     chpwd,
     quote_cmdlinearg,
@@ -68,32 +69,22 @@ class Update(Interface):
         merge=Parameter(
             args=('--merge',),
             action='store_true',
-            doc="""merge any updates into the active branch
+            doc="""merge any updates into the active branch. If a BIDS layout
+            is maintained in the dataset (incoming-bids branch) it will be
+            merged into the active branch, the incoming-native branch
+            otherwise.
             """),
         force_update=Parameter(
             args=('--force-update',),
             action='store_true',
-            doc="""update the incoming-processed branch, even if (re-)download
+            doc="""update the incoming-native branch, even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
-        bids=Parameter(
-            args=('--bids',),
-            action='store_true',
-            doc="""restructure the incoming-processed branch into a BIDS-like
-            organization."""),
-        non_bids_dir=Parameter(
-            args=('--non-bids-dir',),
-            metavar='PATH',
-            doc="""if BIDS restructuring is enabled, relative path (to the
-            session directory) of a directory to place all unrecognized files
-            into.""",
-            constraints=EnsureStr() | EnsureNone()),
     )
     @staticmethod
     @datasetmethod(name='ukb_update')
     @eval_results
-    def __call__(keyfile=None, merge=False, force_update=False, bids=False,
-                 non_bids_dir='non-bids', dataset=None):
+    def __call__(keyfile=None, merge=False, force_update=False, dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
@@ -166,7 +157,7 @@ class Update(Interface):
             ),
             explicit=True,
             outputs=['.'],
-            message="Update from UKbiobank",
+            message="Update from UKBiobank",
         )
 
         # TODO what if something broke before? needs force switch
@@ -181,14 +172,14 @@ class Update(Interface):
             return
 
         # onto extraction and transformation of downloaded content
-        repo.call_git(['checkout', 'incoming-processed'])
+        repo.call_git(['checkout', 'incoming-native'])
 
         # mark the incoming change as merged
         # (but we do not actually want any branch content)
-        repo.call_git(['merge', 'incoming', '--strategy=ours', 'incoming'])
+        repo.call_git(['merge', 'incoming', '--strategy=ours'])
 
         for fp in repo.get_content_info(
-                ref='incoming-processed',
+                ref='incoming-native',
                 eval_file_type=False):
             fp.unlink()
 
@@ -229,7 +220,32 @@ class Update(Interface):
                     'annex', 'fromkey', props['key'],
                     str(repo.pathobj / (rec_id + ''.join(fp.suffixes)))])
 
-        if bids:
+        # save whatever the state is now, `save` will discover deletions
+        # automatically and also commit them -- wonderful!
+        ds.save(message="Update native layout")
+        yield dict(
+            res,
+            status='ok',
+        )
+
+        want_bids = 'incoming-bids' in repo.get_branches()
+        if want_bids:
+            repo.call_git(['checkout', 'incoming-bids'])
+            # mark the incoming change as merged
+            # (but we do not actually want any branch content)
+            repo.call_git(['merge', 'incoming', '--strategy=ours'])
+            # prepare the worktree to match the latest state
+            # of incoming-native but keep histories separate
+            # (ie. no merge), because we cannot handle partial
+            # changes
+            repo.call_git(['read-tree', '-u', '--reset', 'incoming-native'])
+            # unstage change to present a later `datalad save` a single
+            # changeset to be saved (otherwise it might try to keep staged
+            # content staged und only save additional modifications)
+            #repo.call_git(['restore', '--staged', '.'])
+            repo.call_git(['reset', 'HEAD', '.'])
+
+            # and now do the BIDSification
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
             # get participant ID from batch file
             subid = list(repo.call_git_items_(
@@ -239,17 +255,10 @@ class Update(Interface):
             yield from restructure_ukb2bids(
                 ds,
                 subid=subid,
-                unrecognized_dir=non_bids_dir,
+                unrecognized_dir='non-bids',
                 base_path=repo.pathobj,
             )
-
-        # save whatever the state is now, `save` will discover deletions
-        # automatically and also commit them -- wonderful!
-        ds.save(message="Track ZIP file content")
-        yield dict(
-            res,
-            status='ok',
-        )
+            ds.save(message="Update BIDS layout")
 
         if not merge:
             return
@@ -257,7 +266,9 @@ class Update(Interface):
         # and update active branch
         repo.call_git(['checkout', initial_branch])
 
-        if initial_branch in ('incoming', 'incoming-processed'):
+        if initial_branch in ('incoming',
+                              'incoming-native',
+                              'incoming-bids'):
             yield dict(
                 res,
                 action='ukb_merge_update',
@@ -269,7 +280,7 @@ class Update(Interface):
         repo.call_git([
             'merge',
             '-m', "Merge update from UKbiobank",
-            'incoming-processed'])
+            'incoming-bids' if want_bids else 'incoming-native'])
 
         yield dict(
             res,
