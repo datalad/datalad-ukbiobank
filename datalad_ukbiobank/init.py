@@ -47,10 +47,12 @@ class Init(Interface):
     After initialization the dataset will contain at least three branches:
 
     - incoming: to track the pristine ZIP files downloaded from UKB
-    - incoming-native: to track extracted ZIP file content, in a potentially
-      restructures layout (i.e. BIDS-like file name conventions)
-    - master: based off of incoming-native with potential manual modifications
-      applied
+    - incoming-native: to track individual files (some extracted from ZIP
+      files)
+    - incoming-bids: to track individual files in a layout where file name
+      conform to BIDS-conventions
+    - master: based off of incoming-native or incoming-bids (if enabled)
+      with potential manual modifications applied
     """
 
     _examples_ = [
@@ -58,6 +60,10 @@ class Init(Interface):
             text='Initialize a dataset in the current directory',
             code_cmd='datalad ukb-init 5874415 20227_2_0 20249_2_0',
             code_py='ukb_init(participant="5874415", records=["20227_2_0", "20249_2_0"])'),
+        dict(
+            text='Initialize a dataset in the current directory in BIDS layout',
+            code_cmd='datalad ukb-init --bids 5874415 20227_2_0',
+            code_py='ukb_init(participant="5874415", records=["20227_2_0"], bids=True)'),
     ]
 
     _params_ = dict(
