@@ -23,6 +23,7 @@ from datalad.support.constraints import (
     EnsureNone,
 )
 from datalad.support.param import Parameter
+from datalad.support.exceptions import CommandError
 from datalad.utils import (
     chpwd,
     quote_cmdlinearg,
@@ -233,9 +234,31 @@ class Update(Interface):
             # we do not support any external modifications of this
             # incoming-bids branch
             # blindly take over whatever is in incoming-processed
-            repo.call_git([
-                'merge', 'incoming-processed',
-                '-s', 'recursive', '-X', 'theirs'])
+            try:
+                repo.call_git([
+                    'merge', 'incoming-processed',
+                    '-s', 'recursive', '-X', 'theirs'])
+            except CommandError as e:
+                # the merge can fail, if files are no longer present
+                # in incoming-processed that we have renamed in
+                # incoming-bids, make an attempt to resolve
+                # check for "added by us" merge conflicts
+                added_by_us = [
+                    # strip status indicator
+                    f[3:]
+                    for f in repo.call_git_items_(
+                        ['status', '--porcelain=1', '-z', '-uno',
+                         '--ignore-submodules=all'],
+                        sep='\0')
+                    if f.startswith('AU ')]
+                if added_by_us:
+                    repo.call_git(['rm'] + added_by_us)
+                    repo.call_git([
+                        'commit', '-m',
+                        "Merge branch 'incoming-processed' (removed vanished files)"])
+                else:
+                    # this wasn't the problem, erupt
+                    raise e
 
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
             # get participant ID from batch file
