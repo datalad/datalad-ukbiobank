@@ -74,17 +74,17 @@ class Update(Interface):
             merged into the active branch, the incoming-native branch
             otherwise.
             """),
-        force_update=Parameter(
-            args=('--force-update',),
+        force=Parameter(
+            args=('-f', '--force',),
             action='store_true',
-            doc="""update the incoming-native branch, even if (re-)download
+            doc="""update the incoming branch(es), even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
     )
     @staticmethod
     @datasetmethod(name='ukb_update')
     @eval_results
-    def __call__(keyfile=None, merge=False, force_update=False, dataset=None):
+    def __call__(keyfile=None, merge=False, force=False, dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
 
@@ -161,7 +161,7 @@ class Update(Interface):
         )
 
         # TODO what if something broke before? needs force switch
-        if not force_update and repo.get_hexsha() == initial_incoming:
+        if not force and repo.get_hexsha() == initial_incoming:
             yield dict(
                 res,
                 status='notneeded',

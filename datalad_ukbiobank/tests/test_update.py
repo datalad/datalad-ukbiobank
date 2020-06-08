@@ -103,7 +103,7 @@ def test_base(dspath, records):
             str(bin_dir),
             os.environ['PATH'])}):
         assert_in_results(
-            ds.ukb_update(merge=True, force_update=True, on_failure='ignore'),
+            ds.ukb_update(merge=True, force=True, on_failure='ignore'),
             status='impossible',
             message='Refuse to merge into incoming* branch',)
 
@@ -143,7 +143,7 @@ def test_bids(dspath, records):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force_update=True)
+        ds.ukb_update(merge=True, force=True)
 
     bids_files = ds.repo.get_files('incoming-bids')
     master_files = ds.repo.get_files()
@@ -160,4 +160,4 @@ def test_bids(dspath, records):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force_update=True)
+        ds.ukb_update(merge=True, force=True)
