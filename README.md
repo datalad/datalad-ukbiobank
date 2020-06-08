@@ -37,6 +37,41 @@ a dedicated [virtualenv](https://virtualenv.pypa.io):
     # install from PyPi
     pip install datalad_ukbiobank
 
+## Use
+
+To track UKB data for a single participant (example ID: 1234), start by
+creating and initializing a new dataset:
+
+```
+% datalad create 1234
+% cd 1234
+% datalad ukb-init --bids 1234 20227_2_0 20227_3_0 25755_2_0 25755_3_0
+```
+
+In this example only two data records with two instances each are selected.
+However, any other selection is supported too. The `--bids` flag enables
+an additional dataset layout with a BIDS-like structure.
+
+After initialization, run `ukb-update` at any time to (re-)download data
+from UKB, and update the dataset in order to track changes longitudinally.
+
+```
+datalad -c datalad.ukbiobank.keyfile=<pathtoaccesstoken> ukb-update
+```
+
+This will maintain two or three branches:
+
+- `incoming`: tracking the pristine UKB downloads
+- `incoming-native`: a "native" representation of the extracted downloads
+  for single file access using UKB naming conventions
+- `incoming-bids`: an alternative dataset layout using BIDS conventions
+  (if enabled with `ukb-init --bids`)
+
+Changes can then be merged manually into the `master` branch. Alternatively,
+`ukb-update --merge` merges `incoming-native` (or `incoming-bids` if enabled)
+automatically.
+
+
 ## Use with pre-downloaded data
 
 Re-download can be avoided (while maintaining all other functionality), if the
