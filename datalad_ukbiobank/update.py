@@ -232,9 +232,6 @@ class Update(Interface):
             repo.call_git(['checkout', 'incoming-bids'])
             # we do not support any external modifications of this
             # incoming-bids branch
-            # first wipe all previously existing content
-            for fp in repo.get_files():
-                (repo.pathobj / fp).unlink()
             # blindly take over whatever is in incoming-processed
             repo.call_git([
                 'merge', 'incoming-processed',
