@@ -82,7 +82,7 @@ def test_base(dspath, records):
 
     # get expected file layout
     incoming = ds.repo.get_files('incoming')
-    incoming_p = ds.repo.get_files('incoming-processed')
+    incoming_p = ds.repo.get_files('incoming-native')
     for i in ['12345_25748_2_0.txt', '12345_25748_3_0.txt', '12345_20227_2_0.zip']:
         assert_in(i, incoming)
     for i in ['25748_2_0.txt', '25748_3_0.txt', '20227_2_0/fMRI/rfMRI.nii.gz']:

@@ -71,13 +71,13 @@ class Update(Interface):
             action='store_true',
             doc="""merge any updates into the active branch. If a BIDS layout
             is maintained in the dataset (incoming-bids branch) it will be
-            merged into the active branch, the incoming-processed branch
+            merged into the active branch, the incoming-native branch
             otherwise.
             """),
         force_update=Parameter(
             args=('--force-update',),
             action='store_true',
-            doc="""update the incoming-processed branch, even if (re-)download
+            doc="""update the incoming-native branch, even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
     )
@@ -172,14 +172,14 @@ class Update(Interface):
             return
 
         # onto extraction and transformation of downloaded content
-        repo.call_git(['checkout', 'incoming-processed'])
+        repo.call_git(['checkout', 'incoming-native'])
 
         # mark the incoming change as merged
         # (but we do not actually want any branch content)
         repo.call_git(['merge', 'incoming', '--strategy=ours'])
 
         for fp in repo.get_content_info(
-                ref='incoming-processed',
+                ref='incoming-native',
                 eval_file_type=False):
             fp.unlink()
 
@@ -235,10 +235,10 @@ class Update(Interface):
             # (but we do not actually want any branch content)
             repo.call_git(['merge', 'incoming', '--strategy=ours'])
             # prepare the worktree to match the latest state
-            # of incoming-processed but keep histories separate
+            # of incoming-native but keep histories separate
             # (ie. no merge), because we cannot handle partial
             # changes
-            repo.call_git(['read-tree', '-u', '--reset', 'incoming-processed'])
+            repo.call_git(['read-tree', '-u', '--reset', 'incoming-native'])
             # unstage change to present a later `datalad save` a single
             # changeset to be saved (otherwise it might try to keep staged
             # content staged und only save additional modifications)
@@ -266,7 +266,7 @@ class Update(Interface):
         repo.call_git(['checkout', initial_branch])
 
         if initial_branch in ('incoming',
-                              'incoming-processed',
+                              'incoming-native',
                               'incoming-bids'):
             yield dict(
                 res,
@@ -279,7 +279,7 @@ class Update(Interface):
         repo.call_git([
             'merge',
             '-m', "Merge update from UKbiobank",
-            'incoming-bids' if want_bids else 'incoming-processed'])
+            'incoming-bids' if want_bids else 'incoming-native'])
 
         yield dict(
             res,

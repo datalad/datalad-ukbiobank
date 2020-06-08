@@ -47,9 +47,9 @@ class Init(Interface):
     After initialization the dataset will contain at least three branches:
 
     - incoming: to track the pristine ZIP files downloaded from UKB
-    - incoming-processed: to track extracted ZIP file content, in a potentially
+    - incoming-native: to track extracted ZIP file content, in a potentially
       restructures layout (i.e. BIDS-like file name conventions)
-    - master: based off of incoming-processed with potential manual modifications
+    - master: based off of incoming-native with potential manual modifications
       applied
     """
 
@@ -148,7 +148,7 @@ class Init(Interface):
         )
         # establish rest of the branch structure: "incoming-processsed"
         # for extracted archive content
-        _add_incoming_branch('incoming-processed', branches, repo, batchfile)
+        _add_incoming_branch('incoming-native', branches, repo, batchfile)
         if bids:
             _add_incoming_branch('incoming-bids', branches, repo, batchfile)
         # force merge unrelated histories into master
@@ -161,7 +161,7 @@ class Init(Interface):
             'merge',
             '-m', 'Merge incoming',
             '--allow-unrelated-histories',
-            'incoming-bids' if bids else 'incoming-processed',
+            'incoming-bids' if bids else 'incoming-native',
         ])
 
         yield dict(
