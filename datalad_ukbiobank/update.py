@@ -242,7 +242,8 @@ class Update(Interface):
             # unstage change to present a later `datalad save` a single
             # changeset to be saved (otherwise it might try to keep staged
             # content staged und only save additional modifications)
-            repo.call_git(['restore', '--staged', '.'])
+            #repo.call_git(['restore', '--staged', '.'])
+            repo.call_git(['reset', 'HEAD', '.'])
 
             # and now do the BIDSification
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
