@@ -143,7 +143,7 @@ def test_bids(dspath, records):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True)
+        ds.ukb_update(merge=True, force_update=True)
 
     bids_files = ds.repo.get_files('incoming-bids')
     master_files = ds.repo.get_files()
