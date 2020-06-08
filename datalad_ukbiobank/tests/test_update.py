@@ -153,3 +153,11 @@ def test_bids(dspath, records):
             'ses-3/non-bids/fMRI/sub-12345_ses-3_task-hariri_eprime.txt']:
         assert_in(i, bids_files)
         assert_in(i, master_files)
+
+    # now re-init with a different record subset and rerun
+    ds.ukb_init('12345', ['25747_2_0.adv', '25748_2_0', '25748_3_0'],
+                bids=True, force=True)
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force_update=True)
