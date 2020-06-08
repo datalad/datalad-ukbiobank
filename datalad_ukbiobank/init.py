@@ -148,31 +148,9 @@ class Init(Interface):
         )
         # establish rest of the branch structure: "incoming-processsed"
         # for extracted archive content
-        if 'incoming-processed' not in branches:
-            repo.call_git(['checkout', '-b', 'incoming-processed'])
-        else:
-            repo.call_git(['checkout', 'incoming-processed'])
-            # the only thing that we changed in 'incoming' is the batchfile
-            # which we will wipe out from 'incoming-processed' below.
-            # use -s ours to avoid merge conflicts due to the deleted
-            # file
-            repo.call_git(['merge', 'incoming', '-s', 'ours'])
-        # wipe out batch file to keep download-related info separate
-        if batchfile.exists():
-            repo.call_git_success(['rm', '-f', '.ukbbatch'])
-            repo.commit(
-                files=['.ukbbatch'],
-                msg="Do not leak ukbfetch configuration into dataset content")
+        _add_incoming_branch('incoming-processed', branches, repo, batchfile)
         if bids:
-            if 'incoming-bids' not in branches:
-                repo.call_git(['checkout', '-b', 'incoming-bids'])
-            else:
-                repo.call_git(['checkout', 'incoming-bids'])
-                # a reinit cannot create any change that would (need to)
-                # reach the bids branch, just merge to make things
-                # uptodate, while avoiding any potential conflicts
-                # (although there should be none)
-                repo.call_git(['merge', 'incoming', '-s', 'ours'])
+            _add_incoming_branch('incoming-bids', branches, repo, batchfile)
         # force merge unrelated histories into master
         # we are using an orphan branch such that we know that
         # `git ls-tree incoming`
@@ -193,3 +171,21 @@ class Init(Interface):
             records=records,
         )
         return
+
+
+def _add_incoming_branch(name, branches, repo, batchfile):
+    if name not in branches:
+        repo.call_git(['checkout', '-b', name])
+    else:
+        repo.call_git(['checkout', name])
+        # the only thing that we changed in 'incoming' is the batchfile
+        # which we will wipe out from 'incoming-processed' below.
+        # use -s ours to avoid merge conflicts due to the deleted
+        # file
+        repo.call_git(['merge', 'incoming', '-s', 'ours'])
+    # wipe out batch file to keep download-related info separate
+    if batchfile.exists():
+        repo.call_git_success(['rm', '-f', '.ukbbatch'])
+        repo.commit(
+            files=['.ukbbatch'],
+            msg="Do not leak ukbfetch configuration into dataset content")

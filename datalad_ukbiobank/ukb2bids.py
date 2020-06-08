@@ -40,7 +40,7 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
     for fp in ds.status(
             path=base_path,
             annex=None,
-            untracked='no',
+            untracked='all',
             eval_subdataset_state='no',
             report_filetype='raw',
             return_type='generator',

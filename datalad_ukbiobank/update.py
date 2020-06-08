@@ -157,7 +157,7 @@ class Update(Interface):
             ),
             explicit=True,
             outputs=['.'],
-            message="Update from UKbiobank",
+            message="Update from UKBiobank",
         )
 
         # TODO what if something broke before? needs force switch
@@ -176,7 +176,7 @@ class Update(Interface):
 
         # mark the incoming change as merged
         # (but we do not actually want any branch content)
-        repo.call_git(['merge', 'incoming', '--strategy=ours', 'incoming'])
+        repo.call_git(['merge', 'incoming', '--strategy=ours'])
 
         for fp in repo.get_content_info(
                 ref='incoming-processed',
@@ -222,7 +222,7 @@ class Update(Interface):
 
         # save whatever the state is now, `save` will discover deletions
         # automatically and also commit them -- wonderful!
-        ds.save(message="Track ZIP file content")
+        ds.save(message="Update native layout")
         yield dict(
             res,
             status='ok',
@@ -231,35 +231,20 @@ class Update(Interface):
         want_bids = 'incoming-bids' in repo.get_branches()
         if want_bids:
             repo.call_git(['checkout', 'incoming-bids'])
-            # we do not support any external modifications of this
-            # incoming-bids branch
-            # blindly take over whatever is in incoming-processed
-            try:
-                repo.call_git([
-                    'merge', 'incoming-processed',
-                    '-s', 'recursive', '-X', 'theirs'])
-            except CommandError as e:
-                # the merge can fail, if files are no longer present
-                # in incoming-processed that we have renamed in
-                # incoming-bids, make an attempt to resolve
-                # check for "added by us" merge conflicts
-                added_by_us = [
-                    # strip status indicator
-                    f[3:]
-                    for f in repo.call_git_items_(
-                        ['status', '--porcelain=1', '-z', '-uno',
-                         '--ignore-submodules=all'],
-                        sep='\0')
-                    if f.startswith('AU ')]
-                if added_by_us:
-                    repo.call_git(['rm'] + added_by_us)
-                    repo.call_git([
-                        'commit', '-m',
-                        "Merge branch 'incoming-processed' (removed vanished files)"])
-                else:
-                    # this wasn't the problem, erupt
-                    raise e
+            # mark the incoming change as merged
+            # (but we do not actually want any branch content)
+            repo.call_git(['merge', 'incoming', '--strategy=ours'])
+            # prepare the worktree to match the latest state
+            # of incoming-processed but keep histories separate
+            # (ie. no merge), because we cannot handle partial
+            # changes
+            repo.call_git(['read-tree', '-u', '--reset', 'incoming-processed'])
+            # unstage change to present a later `datalad save` a single
+            # changeset to be saved (otherwise it might try to keep staged
+            # content staged und only save additional modifications)
+            repo.call_git(['restore', '--staged', '.'])
 
+            # and now do the BIDSification
             from datalad_ukbiobank.ukb2bids import restructure_ukb2bids
             # get participant ID from batch file
             subid = list(repo.call_git_items_(
@@ -272,7 +257,7 @@ class Update(Interface):
                 unrecognized_dir='non-bids',
                 base_path=repo.pathobj,
             )
-            ds.save(message="Establish BIDS layout")
+            ds.save(message="Update BIDS layout")
 
         if not merge:
             return
