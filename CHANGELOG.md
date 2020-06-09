@@ -14,7 +14,7 @@
   - Updated BIDS file name mapping.
 
 - A "native" (`incoming-native` branch) and a "bids" layout (`incoming-bids`
-  branch)are now maintained in parallel by `ukb-update` to support both views
+  branch) are now maintained in parallel by `ukb-update` to support both views
   using a single dataset. Enabling the "bids" layout is now done via `ukb-init`.
   gh-38
 
