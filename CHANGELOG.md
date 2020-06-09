@@ -32,9 +32,9 @@
 - A keyfile location can now be entered interactively, if not pre-configured.
   gh-39
 
-- An example implementation of a faux is not included in `tools/`. Such
-  an implementation can be used to feed already downloaded UKB data records
-  to this extension.
+- An example implementation of a faux `ukbfetch` is now included in `tools/`.
+  Such an implementation can be used to feed already downloaded UKB data
+  records to this extension.
 
 0.2 (Apr 11, 2020) -- multi-utility
 
