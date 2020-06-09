@@ -11,6 +11,8 @@ from datalad.tests.utils import (
     assert_not_in,
     assert_raises,
     assert_status,
+    eq_,
+    neq_,
     with_tempfile,
 )
 from datalad_ukbiobank.tests import (
@@ -155,9 +157,49 @@ def test_bids(dspath, records):
         assert_in(i, master_files)
 
     # now re-init with a different record subset and rerun
-    ds.ukb_init('12345', ['25747_2_0.adv', '25748_2_0', '25748_3_0'],
+    ds.ukb_init('12345', ['25747_2_0', '25748_2_0', '25748_3_0'],
                 bids=True, force=True)
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
         ds.ukb_update(merge=True, force=True)
+
+@with_tempfile
+@with_tempfile(mkdir=True)
+def test_drop(dspath, records):
+    make_datarecord_zips('12345', records)
+    ds = create(dspath)
+    ds.ukb_init(
+        '12345',
+        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'])
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    bin_dir = make_ukbfetch(ds, records)
+
+    # baseline
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force=True)
+    zips_in_ds = list(ds.pathobj.glob('**/*.zip'))
+    neq_(zips_in_ds, [])
+
+    # drop archives
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force=True, drop='archives')
+    # no ZIPs can be found, also not in the annex
+    eq_(list(ds.pathobj.glob('**/*.zip')), [])
+    # we can get all we want (or rather still have it)
+    assert_status('notneeded', ds.get('.'))
+
+    # now drop extracted content instead
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        ds.ukb_update(merge=True, force=True, drop='extracted')
+    eq_(list(ds.pathobj.glob('**/*.zip')), zips_in_ds)
+    # we can get all
+    assert_status('ok', ds.get('.'))
+    # a non-zip content file is still around
+    eq_((ds.pathobj / '25747_2_0.adv').read_text(), '25747_2_0.adv')
