@@ -1,3 +1,41 @@
+0.3 (Jun ??, 2020) -- break for good
+
+- Various substantial issues were fixed:
+
+  - Handle non-ZIP file download properly.
+
+  - Avoid leakage of absolute paths into the run-record for `ukbfetch`.
+
+  - Establish a new "native" layout for (extracted) data records that
+    makes it possible to properly associate individual files with their
+    records, even when an original archive does not contain a top-level
+    directory. gh-29
+
+  - Updated BIDS file name mapping.
+
+- A "native" (`incoming-native` branch) and a "bids" layout (`incoming-bids`
+  branch)are now maintained in parallel by `ukb-update` to support both views
+  using a single dataset. Enabling the "bids" layout is now done via `ukb-init`.
+  gh-38
+
+- `ukb-update --force-update` was renamed to `ukb-update --force`.
+
+- The `ukb-update` option `--no-bids-dir` was removed.
+
+- `ukb-update` learned to optionally drop extracted archive content or
+  downloaded archives (`--drop`). Both modes avoid duplication of storage.
+
+- A basic usage description was added to the README.
+
+- A unit test battery was added.
+
+- A keyfile location can now be entered interactively, if not pre-configured.
+  gh-39
+
+- An example implementation of a faux is not included in `tools/`. Such
+  an implementation can be used to feed already downloaded UKB data records
+  to this extension.
+
 0.2 (Apr 11, 2020) -- multi-utility
 
 - Support for multi-instance data records (i.e. imaging data from multiple
