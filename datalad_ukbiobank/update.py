@@ -19,6 +19,7 @@ from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
 from datalad.interface.add_archive_content import AddArchiveContent
 from datalad.support.constraints import (
+    EnsureChoice,
     EnsureStr,
     EnsureNone,
 )
@@ -80,13 +81,29 @@ class Update(Interface):
             doc="""update the incoming branch(es), even if (re-)download
             did not yield changed content (can be useful when restructuring
             setup has changed)."""),
+        drop=Parameter(
+            args=('--drop',),
+            doc="""Drop file content to avoid storage duplication.
+            'extracted': drop all content of files extracted from downloaded
+            archives to yield the most compact storage at the cost of partial
+            re-extraction when accessing archive content;
+            'archives': keep extracted content, but drop archives instead.
+            By default no content is dropped, duplicating archive content in
+            extracted form.""",
+            constraints=EnsureChoice(None, 'extracted', 'archives')),
+
     )
     @staticmethod
     @datasetmethod(name='ukb_update')
     @eval_results
-    def __call__(keyfile=None, merge=False, force=False, dataset=None):
+    def __call__(keyfile=None, merge=False, force=False, drop=None,
+                 dataset=None):
         ds = require_dataset(
             dataset, check_installed=True, purpose='update')
+
+        if drop and drop not in ('extracted', 'archives'):
+            raise ValueError(
+                "Unrecognized value for 'drop' option: {}".format(drop))
 
         repo = ds.repo
         if not keyfile:
@@ -259,6 +276,36 @@ class Update(Interface):
                 base_path=repo.pathobj,
             )
             ds.save(message="Update BIDS layout")
+
+        if drop:
+            if drop == 'archives':
+                drop_kwargs = dict(
+                    # we need to force the drop, because the download is the
+                    # only copy we have in general
+                    opts=['--force', '--branch', 'incoming', '-I', '*.zip'],
+                    expect_fail=False,
+                    expect_stderr=False,
+                    runner="gitwitless",
+                )
+            else:  # drop == 'extracted':
+                drop_kwargs = dict(
+                    opts=['--in', 'datalad-archives',
+                          '--branch', 'incoming-native'],
+                    expect_fail=False,
+                    expect_stderr=False,
+                    runner="gitwitless",
+                )
+
+            for rec in repo._run_annex_command_json('drop', **drop_kwargs):
+                if not rec.get('success', False):
+                    yield dict(
+                        action='drop',
+                        status='error',
+                        message=rec.get('note', 'could not drop key'),
+                        key=rec.get('key', None),
+                        type='key',
+                        path=ds.path,
+                    )
 
         if not merge:
             return
