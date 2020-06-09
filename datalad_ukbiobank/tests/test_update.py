@@ -59,7 +59,7 @@ def test_base(dspath, records):
     ds = create(dspath)
     ds.ukb_init(
         '12345',
-        ['20227_2_0', '25747_2_0.adv', '25748_2_0', '25748_3_0'])
+        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'])
     # dummy key file, no needed to bypass tests
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
 
@@ -118,7 +118,7 @@ def test_bids(dspath, records):
     ds = create(dspath)
     ds.ukb_init(
         '12345',
-        ['20227_2_0', '25747_2_0.adv', '25748_2_0', '25748_3_0'],
+        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'],
         bids=True)
     # dummy key file, no needed to bypass tests
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
