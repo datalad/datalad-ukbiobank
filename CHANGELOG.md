@@ -1,4 +1,4 @@
-0.3 (Jun ??, 2020) -- break for good
+0.3 (Jun 15, 2020) -- break for good
 
 - Various substantial issues were fixed:
 
@@ -17,6 +17,9 @@
   branch) are now maintained in parallel by `ukb-update` to support both views
   using a single dataset. Enabling the "bids" layout is now done via `ukb-init`.
   gh-38
+
+- Added Sphinx-based documentation available at:
+  http://docs.datalad.org/projects/ukbiobank
 
 - `ukb-update --force-update` was renamed to `ukb-update --force`.
 
