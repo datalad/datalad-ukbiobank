@@ -5,7 +5,8 @@
 
 This software is a [DataLad](http://datalad.org) extension that equips DataLad
 with a set of commands to obtain (and monitor) imaging data releases of the
-UKbiobank.
+UKbiobank (see [documentation](http://docs.datalad.org/projects/ukbiobank) for
+more information).
 
 [UKbiobank](https://www.ukbiobank.ac.uk) is a national and international health
 resource with unparalleled research opportunities, open to all bona fide health
