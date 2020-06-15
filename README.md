@@ -1,6 +1,6 @@
 # DataLad extension for working with the UKbiobank
 
-[![GitHub release](https://img.shields.io/github/release/datalad/ukbiobank.svg)](https://GitHub.com/datalad/ukbiobank/releases/) [![PyPI version fury.io](https://badge.fury.io/py/ukbiobank.svg)](https://pypi.python.org/pypi/ukbiobank/) [![Travis tests status](https://secure.travis-ci.org/datalad/datalad-ukbiobank.png?branch=master)](https://travis-ci.org/datalad/datalad-ukbiobank) [![codecov.io](https://codecov.io/github/datalad/datalad-ukbiobank/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-ukbiobank?branch=master) [![crippled-filesystems](https://github.com/datalad/datalad-ukbiobank/workflows/crippled-filesystems/badge.svg)](https://github.com/datalad/datalad-ukbiobank/actions?query=workflow%3Acrippled-filesystems) [![win2019](https://github.com/datalad/datalad-ukbiobank/workflows/win2019/badge.svg)](https://github.com/datalad/datalad-ukbiobank/actions?query=workflow%3Awin2019)  [![docs](https://github.com/datalad/datalad-ukbiobank/workflows/docs/badge.svg)](https://github.com/datalad/datalad-ukbiobank/actions?query=workflow%3Adocs)
+[![GitHub release](https://img.shields.io/github/release/datalad/ukbiobank.svg)](https://GitHub.com/datalad/ukbiobank/releases/) [![PyPI version fury.io](https://badge.fury.io/py/ukbiobank.svg)](https://pypi.python.org/pypi/ukbiobank/) [![Travis tests status](https://secure.travis-ci.org/datalad/datalad-ukbiobank.png?branch=master)](https://travis-ci.org/datalad/datalad-ukbiobank) [![codecov.io](https://codecov.io/github/datalad/datalad-ukbiobank/coverage.svg?branch=master)](https://codecov.io/github/datalad/datalad-ukbiobank?branch=master) [![docs](https://github.com/datalad/datalad-ukbiobank/workflows/docs/badge.svg)](https://github.com/datalad/datalad-ukbiobank/actions?query=workflow%3Adocs)
 
 
 This software is a [DataLad](http://datalad.org) extension that equips DataLad
@@ -21,7 +21,6 @@ Command(s) provided by this extension
 
 - `ukb-init` -- Initialize an existing dataset to track a UKBiobank participant
 - `ukb-update` -- Update an existing dataset of a UKbiobank participant
-
 
 ## Installation
 
@@ -79,6 +78,14 @@ Re-download can be avoided (while maintaining all other functionality), if the
 `ukbfetch` utility is replaced by a shim that obtains the relevant files from
 where they have been downloaded to. An example script is provided at
 `tools/ukbfetch_surrogate.sh`.
+
+
+## Use on non-UNIX-like operating systems
+
+This code relies on a number of POSIX filesystem features that may make it
+somewhat hard to get working on Windows. Contributions to port this extension
+to non-POSIX platforms are welcome, but presently this is not supported.
+
 
 ## Support
 
