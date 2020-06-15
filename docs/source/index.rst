@@ -1,8 +1,19 @@
-DataLad extension template
-**************************
+DataLad extension for working with the UKbiobank
+************************************************
 
-This is a template for creating a `DataLad <http://datalad.org>`__ extension
-that equips DataLad with additional functionality.
+This software is a `DataLad <http://datalad.org>`__ extension that equips
+DataLad with a set of commands to obtain (and monitor) imaging data releases of
+the UKbiobank.
+
+`UKbiobank <https://www.ukbiobank.ac.uk>`__ is a national and international
+health resource with unparalleled research opportunities, open to all bona fide
+health researchers. UK Biobank aims to improve the prevention, diagnosis and
+treatment of a wide range of serious and life-threatening illnesses – including
+cancer, heart diseases, stroke, diabetes, arthritis, osteoporosis, eye
+disorders, depression and forms of dementia. It is following the health and
+well-being of 500,000 volunteer participants and provides health information,
+which does not identify them, to approved researchers in the UK and overseas,
+from academia and industry.
 
 
 API
