@@ -3,7 +3,7 @@ import sys
 from setuptools import setup
 import versioneer
 
-from _datalad_build_support.setup import (
+from _datalad_buildsupport.setup import (
     BuildManPage,
 )
 
