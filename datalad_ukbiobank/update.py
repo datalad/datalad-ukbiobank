@@ -245,7 +245,8 @@ class Update(Interface):
             status='ok',
         )
 
-        want_bids = 'incoming-bids' in repo.get_branches()
+        want_bids = 'incoming-bids' in repo.get_branches() \
+            or any(b.endswith('/incoming-bids') for b in repo.get_remote_branches())
         if want_bids:
             repo.call_git(['checkout', 'incoming-bids'])
             # mark the incoming change as merged
