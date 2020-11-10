@@ -206,3 +206,8 @@ def _add_incoming_branch(name, incoming_branches, repo, batchfile):
         repo.commit(
             files=['.ukbbatch'],
             msg="Do not leak ukbfetch configuration into dataset content")
+    # inherit the standard attributes to ensure uniform behavior
+    # across branches
+    (repo.pathobj / '.gitattributes').write_text(
+        repo.call_git(['cat-file', '-p', 'incoming:.gitattributes']))
+    repo.save(message='Apply standard Git attributes', paths=['.gitattributes'])
