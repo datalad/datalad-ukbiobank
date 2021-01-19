@@ -279,24 +279,14 @@ class Update(Interface):
 
         if drop:
             if drop == 'archives':
-                drop_kwargs = dict(
-                    # we need to force the drop, because the download is the
-                    # only copy we have in general
-                    opts=['--force', '--branch', 'incoming', '-I', '*.zip'],
-                    expect_fail=False,
-                    expect_stderr=False,
-                    runner="gitwitless",
-                )
+                # we need to force the drop, because the download is the
+                # only copy we have in general
+                drop_opts = ['--force', '--branch', 'incoming', '-I', '*.zip']
             else:  # drop == 'extracted':
-                drop_kwargs = dict(
-                    opts=['--in', 'datalad-archives',
-                          '--branch', 'incoming-native'],
-                    expect_fail=False,
-                    expect_stderr=False,
-                    runner="gitwitless",
-                )
+                drop_opts=['--in', 'datalad-archives',
+                           '--branch', 'incoming-native']
 
-            for rec in repo._run_annex_command_json('drop', **drop_kwargs):
+            for rec in repo.call_annex_records(['drop'] + drop_opts):
                 if not rec.get('success', False):
                     yield dict(
                         action='drop',
