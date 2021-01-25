@@ -109,6 +109,7 @@ class Init(Interface):
 
         repo = ds.repo
         branches = repo.get_branches()
+        main_branch = repo.get_active_branch()
 
         # prep for yield
         res = dict(
@@ -162,7 +163,7 @@ class Init(Interface):
         # `git ls-tree incoming`
         # will only report download-related content, nothing extracted or
         # manually modified
-        repo.call_git(['checkout', 'master'])
+        repo.call_git(['checkout', main_branch])
         repo.call_git([
             'merge',
             '-m', 'Merge incoming',
