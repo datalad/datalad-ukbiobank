@@ -5,6 +5,8 @@ from datalad.api import (
 from datalad.tests.utils import (
     assert_not_in,
     assert_status,
+    assert_true,
+    DEFAULT_BRANCH,
     eq_,
     with_tempfile,
 )
@@ -15,15 +17,17 @@ def test_base(path):
     ds = create(path)
     ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'])
     # standard branch setup
-    eq_(sorted(ds.repo.get_branches()),
-        ['git-annex', 'incoming', 'incoming-native', 'master'])
+    assert_true(all(
+        b in sorted(ds.repo.get_branches())
+        for b in ['git-annex', 'incoming', 'incoming-native', DEFAULT_BRANCH])
+    )
     # standard batch file setup
     eq_(ds.repo.call_git(['cat-file', '-p', 'incoming:.ukbbatch']),
         '12345 20249_2_0\n12345 20249_3_0\n12345 20250_2_0\n')
     # intermediate branch is empty
     eq_(ds.repo.call_git(['ls-tree', 'incoming-native']), '')
     # no batch in master
-    assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', 'master']))
+    assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', DEFAULT_BRANCH]))
 
     # no re-init without force
     assert_status(
@@ -41,17 +45,20 @@ def test_bids(path):
     ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'],
                 bids=True)
     # standard branch setup
-    eq_(sorted(ds.repo.get_branches()),
-        ['git-annex', 'incoming', 'incoming-bids', 'incoming-native',
-         'master'])
+    assert_true(all(
+        b in sorted(ds.repo.get_branches())
+        for b in ['git-annex', 'incoming', 'incoming-native', DEFAULT_BRANCH])
+    )
     # intermediate branches are empty
     for b in 'incoming-bids', 'incoming-native':
         eq_(ds.repo.call_git(['ls-tree', b]), '')
     # no batch in master
-    assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', 'master']))
+    assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', DEFAULT_BRANCH]))
 
     # smoke test for a reinit
     ds.ukb_init('12345', ['20250_2_0'], bids=True, force=True)
-    eq_(sorted(ds.repo.get_branches()),
-        ['git-annex', 'incoming', 'incoming-bids', 'incoming-native',
-         'master'])
+    assert_true(all(
+        b in sorted(ds.repo.get_branches())
+        for b in ['git-annex', 'incoming', 'incoming-native',
+                  'incoming-bids', DEFAULT_BRANCH])
+    )

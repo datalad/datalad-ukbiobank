@@ -13,6 +13,7 @@ from datalad.tests.utils import (
     assert_status,
     eq_,
     neq_,
+    skip_if_on_windows,
     with_tempfile,
 )
 from datalad_ukbiobank.tests import (
@@ -51,6 +52,7 @@ def make_ukbfetch(ds, records):
     return bin_dir
 
 
+@skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
 def test_base(dspath, records):
@@ -110,6 +112,7 @@ def test_base(dspath, records):
             message='Refuse to merge into incoming* branch',)
 
 
+@skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
 def test_bids(dspath, records):
@@ -164,6 +167,8 @@ def test_bids(dspath, records):
             os.environ['PATH'])}):
         ds.ukb_update(merge=True, force=True)
 
+
+@skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
 def test_drop(dspath, records):
