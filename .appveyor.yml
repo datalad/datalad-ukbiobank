@@ -146,8 +146,6 @@ install:
 
 build_script:
   - pip install -r requirements-devel.txt
-  # in anticipation of datalad 0.14 release test against master:
-  - pip install git+https://github.com/datalad/datalad.git@master
   - pip install "."
 
 
