@@ -1,3 +1,22 @@
+0.3.2 (Mar 23, 2021) -- docs!
+
+- Major documentation update: concepts, procedures, commands
+
+- Fixes
+
+  - Improved maintainability. `ukb-update` now runs on a fresh clone
+    of a dataset that has been initialized with `ukb-init` in the past.
+    gh-55
+
+  - All branches processed by `ukb-update` will now inherit the most
+    recent state of the main branch's `.gitattributes` file. gh-54
+
+  - No longer hard-code the name of the main branch. gh-68
+
+0.3.1 (Jan 27, 2021) -- just fiddling
+
+- Minor adjustments for compatibility with DataLad 0.14
+
 0.3 (Jun 15, 2020) -- break for good
 
 - Various substantial issues were fixed:
