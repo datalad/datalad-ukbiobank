@@ -46,12 +46,12 @@ class Init(Interface):
 
     After initialization the dataset will contain at least three branches:
 
-    - incoming: to track the pristine ZIP files downloaded from UKB
-    - incoming-native: to track individual files (some extracted from ZIP
+    - 'incoming': to track the pristine ZIP files downloaded from UKB
+    - 'incoming-native': to track individual files (some extracted from ZIP
       files)
-    - incoming-bids: to track individual files in a layout where file name
+    - 'incoming-bids': to track individual files in a layout where file name
       conform to BIDS-conventions
-    - master: based off of incoming-native or incoming-bids (if enabled)
+    - main branch: based off of incoming-native or incoming-bids (if enabled)
       with potential manual modifications applied
     """
 
@@ -154,7 +154,8 @@ class Init(Interface):
         # inherit the standard attributes to ensure uniform behavior
         # across branches
         (repo.pathobj / '.gitattributes').write_text(
-            repo.call_git(['cat-file', '-p', 'master:.gitattributes']))
+            repo.call_git(
+                ['cat-file', '-p', '{}:.gitattributes'.format(main_branch)]))
         # save to incoming branch, provide path to avoid adding untracked
         # content
         ds.save(
@@ -168,7 +169,7 @@ class Init(Interface):
         _add_incoming_branch('incoming-native', incoming_branches, repo, batchfile)
         if bids:
             _add_incoming_branch('incoming-bids', incoming_branches, repo, batchfile)
-        # force merge unrelated histories into master
+        # force merge unrelated histories into main branch
         # we are using an orphan branch such that we know that
         # `git ls-tree incoming`
         # will only report download-related content, nothing extracted or
