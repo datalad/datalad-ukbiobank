@@ -148,10 +148,11 @@ class Update(Interface):
         # just to be nice, and to be able to check it out again,
         # when we are done
         initial_branch = repo.get_active_branch()
-        initial_incoming = repo.get_hexsha('incoming')
 
-        # make sure we are in incoming
+        # make sure we are in incoming, this should create a local branch
+        # tracking the remote
         repo.call_git(['checkout', 'incoming'])
+        initial_incoming = repo.get_hexsha('incoming')
 
         # first wipe out all prev. downloaded zip files so we can detect
         # when some files are no longer available
