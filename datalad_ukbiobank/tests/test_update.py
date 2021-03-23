@@ -1,9 +1,10 @@
 import sys
 import os
-from mock import patch
+from unittest.mock import patch
 
 from datalad.api import (
     create,
+    clone,
 )
 from datalad.tests.utils import (
     assert_in,
@@ -55,7 +56,8 @@ def make_ukbfetch(ds, records):
 @skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
-def test_base(dspath, records):
+@with_tempfile(mkdir=True)
+def test_base(dspath, records, clonedir):
     # make fake UKB datarecord downloads
     make_datarecord_zips('12345', records)
 
@@ -100,6 +102,13 @@ def test_base(dspath, records):
             str(bin_dir),
             os.environ['PATH'])}):
         ds.ukb_update(merge=True)
+
+    cloned = clone(source=ds.path, path=clonedir)
+    cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    with patch.dict('os.environ', {'PATH': '{}:{}'.format(
+            str(bin_dir),
+            os.environ['PATH'])}):
+        cloned.ukb_update(merge=True)
 
     # rightfully refuse to merge when active branch is an incoming* one
     ds.repo.checkout('incoming')
