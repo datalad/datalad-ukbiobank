@@ -1,26 +1,29 @@
-DataLad extension for working with the UKbiobank
-************************************************
+DataLad extension for working with the UK Biobank
+*************************************************
 
-This software is a `DataLad <http://datalad.org>`__ extension that equips
-DataLad with a set of commands to obtain (and monitor) imaging data releases of
-the UKbiobank.
+Overview
+========
 
-`UKbiobank <https://www.ukbiobank.ac.uk>`__ is a national and international
-health resource with unparalleled research opportunities, open to all bona fide
-health researchers. UK Biobank aims to improve the prevention, diagnosis and
-treatment of a wide range of serious and life-threatening illnesses – including
-cancer, heart diseases, stroke, diabetes, arthritis, osteoporosis, eye
-disorders, depression and forms of dementia. It is following the health and
-well-being of 500,000 volunteer participants and provides health information,
-which does not identify them, to approved researchers in the UK and overseas,
-from academia and industry.
+.. toctree::
+   :maxdepth: 2
+
+   introduction
+   concepts
+   examples
 
 
-API
-===
+Command Line Reference
+======================
 
-High-level API commands
------------------------
+.. toctree::
+   :maxdepth: 1
+
+   generated/man/datalad-ukb-init
+   generated/man/datalad-ukb-update
+
+
+Python API
+==========
 
 .. currentmodule:: datalad.api
 .. autosummary::
@@ -28,16 +31,6 @@ High-level API commands
 
    ukb_init
    ukb_update
-
-
-Command line reference
-----------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   generated/man/datalad-ukb-init
-   generated/man/datalad-ukb-update
 
 
 Indices and tables
@@ -48,3 +41,11 @@ Indices and tables
 * :ref:`search`
 
 .. |---| unicode:: U+02014 .. em dash
+
+Acknowledgements
+================
+
+This development was supported by European Union’s Horizon 2020 research and
+innovation programme under grant agreement `VirtualBrainCloud
+(H2020-EU.3.1.5.3, grant no.  826421)
+<https://cordis.europa.eu/project/id/826421>`_.
