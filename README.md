@@ -68,7 +68,7 @@ This will maintain two or three branches:
 - `incoming-bids`: an alternative dataset layout using BIDS conventions
   (if enabled with `ukb-init --bids`)
 
-Changes can then be merged manually into the `master` branch. Alternatively,
+Changes can then be merged manually into the main branch. Alternatively,
 `ukb-update --merge` merges `incoming-native` (or `incoming-bids` if enabled)
 automatically.
 

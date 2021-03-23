@@ -46,12 +46,12 @@ class Init(Interface):
 
     After initialization the dataset will contain at least three branches:
 
-    - incoming: to track the pristine ZIP files downloaded from UKB
-    - incoming-native: to track individual files (some extracted from ZIP
+    - 'incoming': to track the pristine ZIP files downloaded from UKB
+    - 'incoming-native': to track individual files (some extracted from ZIP
       files)
-    - incoming-bids: to track individual files in a layout where file name
+    - 'incoming-bids': to track individual files in a layout where file name
       conform to BIDS-conventions
-    - master: based off of incoming-native or incoming-bids (if enabled)
+    - main branch: based off of incoming-native or incoming-bids (if enabled)
       with potential manual modifications applied
     """
 
@@ -108,8 +108,14 @@ class Init(Interface):
         records = ensure_list(records)
 
         repo = ds.repo
-        branches = repo.get_branches()
         main_branch = repo.get_active_branch()
+        # test for awareness of incoming branches
+        incoming_branches = [
+            b
+            for b in ('incoming', 'incoming-native', 'incoming-bids')
+            if b in repo.get_branches()
+            or any(u.endswith('/{}'.format(b)) for u in repo.get_remote_branches())
+        ]
 
         # prep for yield
         res = dict(
@@ -120,7 +126,7 @@ class Init(Interface):
             refds=ds.path,
         )
 
-        if 'incoming' in branches and not force:
+        if 'incoming' in incoming_branches and not force:
             yield dict(
                 res,
                 status='error',
@@ -128,7 +134,7 @@ class Init(Interface):
                         'use `force` to reinitialize',
             )
             return
-        if 'incoming' not in branches:
+        if 'incoming' not in incoming_branches:
             # establish "incoming" branch that will hold pristine UKB downloads
             repo.call_git(['checkout', '--orphan', 'incoming'])
         else:
@@ -145,20 +151,25 @@ class Init(Interface):
                     for rec in records)
             )
         )
+        # inherit the standard attributes to ensure uniform behavior
+        # across branches
+        (repo.pathobj / '.gitattributes').write_text(
+            repo.call_git(
+                ['cat-file', '-p', '{}:.gitattributes'.format(main_branch)]))
         # save to incoming branch, provide path to avoid adding untracked
         # content
         ds.save(
-            path='.ukbbatch',
+            path=['.ukbbatch', '.gitattributes'],
             to_git=True,
             message="Configure UKB data fetch",
             result_renderer=None,
         )
-        # establish rest of the branch structure: "incoming-processsed"
+        # establish rest of the branch structure: "incoming-native"
         # for extracted archive content
-        _add_incoming_branch('incoming-native', branches, repo, batchfile)
+        _add_incoming_branch('incoming-native', incoming_branches, repo, batchfile)
         if bids:
-            _add_incoming_branch('incoming-bids', branches, repo, batchfile)
-        # force merge unrelated histories into master
+            _add_incoming_branch('incoming-bids', incoming_branches, repo, batchfile)
+        # force merge unrelated histories into main branch
         # we are using an orphan branch such that we know that
         # `git ls-tree incoming`
         # will only report download-related content, nothing extracted or
@@ -180,8 +191,8 @@ class Init(Interface):
         return
 
 
-def _add_incoming_branch(name, branches, repo, batchfile):
-    if name not in branches:
+def _add_incoming_branch(name, incoming_branches, repo, batchfile):
+    if name not in incoming_branches:
         repo.call_git(['checkout', '-b', name])
     else:
         repo.call_git(['checkout', name])
@@ -196,3 +207,8 @@ def _add_incoming_branch(name, branches, repo, batchfile):
         repo.commit(
             files=['.ukbbatch'],
             msg="Do not leak ukbfetch configuration into dataset content")
+    # inherit the standard attributes to ensure uniform behavior
+    # across branches
+    (repo.pathobj / '.gitattributes').write_text(
+        repo.call_git(['cat-file', '-p', 'incoming:.gitattributes']))
+    repo.save(message='Apply standard Git attributes', paths=['.gitattributes'])

@@ -148,10 +148,11 @@ class Update(Interface):
         # just to be nice, and to be able to check it out again,
         # when we are done
         initial_branch = repo.get_active_branch()
-        initial_incoming = repo.get_hexsha('incoming')
 
-        # make sure we are in incoming
+        # make sure we are in incoming, this should create a local branch
+        # tracking the remote
         repo.call_git(['checkout', 'incoming'])
+        initial_incoming = repo.get_hexsha('incoming')
 
         # first wipe out all prev. downloaded zip files so we can detect
         # when some files are no longer available
@@ -198,12 +199,19 @@ class Update(Interface):
         for fp in repo.get_content_info(
                 ref='incoming-native',
                 eval_file_type=False):
+            if fp.name.startswith('.git') \
+                    or fp.name.startswith('.datalad') \
+                    or fp.name.startswith('.ukb'):
+                # skip internals
+                continue
             fp.unlink()
 
         # discover all files present in the last commit in 'incoming'
         for fp, props in repo.get_content_annexinfo(
                 ref='incoming', eval_availability=False).items():
-            if fp.name.startswith('.'):
+            if fp.name.startswith('.git') \
+                    or fp.name.startswith('.datalad') \
+                    or fp.name.startswith('.ukb'):
                 # skip internals
                 continue
             # we have to extract into per-instance directories, otherwise files
@@ -245,7 +253,8 @@ class Update(Interface):
             status='ok',
         )
 
-        want_bids = 'incoming-bids' in repo.get_branches()
+        want_bids = 'incoming-bids' in repo.get_branches() \
+            or any(b.endswith('/incoming-bids') for b in repo.get_remote_branches())
         if want_bids:
             repo.call_git(['checkout', 'incoming-bids'])
             # mark the incoming change as merged

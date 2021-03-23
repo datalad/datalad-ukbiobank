@@ -24,8 +24,11 @@ def test_base(path):
     # standard batch file setup
     eq_(ds.repo.call_git(['cat-file', '-p', 'incoming:.ukbbatch']),
         '12345 20249_2_0\n12345 20249_3_0\n12345 20250_2_0\n')
-    # intermediate branch is empty
-    eq_(ds.repo.call_git(['ls-tree', 'incoming-native']), '')
+    # intermediate branch is empty, apart from .gitattributes
+    eq_([l
+         for l in ds.repo.call_git(['ls-tree', 'incoming-native']).splitlines()
+         if not l.strip().endswith('.gitattributes')],
+        [])
     # no batch in master
     assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', DEFAULT_BRANCH]))
 
@@ -51,7 +54,10 @@ def test_bids(path):
     )
     # intermediate branches are empty
     for b in 'incoming-bids', 'incoming-native':
-        eq_(ds.repo.call_git(['ls-tree', b]), '')
+        eq_([l
+             for l in ds.repo.call_git(['ls-tree', b]).splitlines()
+             if not l.strip().endswith('.gitattributes')],
+            [])
     # no batch in master
     assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', DEFAULT_BRANCH]))
 
