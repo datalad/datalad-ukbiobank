@@ -121,6 +121,8 @@ init:
 
 
 install:
+  # place a debug setup helper at a convenient location
+  - cmd: copy tools\ci\appveyor_env_setup.bat C:\\datalad_debug.bat
   # If a particular Python version is requested, use env setup (using the
   # appveyor provided environments/installation). Note, these are broken
   # on the ubuntu images
