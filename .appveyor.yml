@@ -152,10 +152,9 @@ install:
 
 
 build_script:
-  - git show-ref
-  - git tag
-  - git describe --tags --always
   - pip install -r requirements-devel.txt
+  - sh: touch ~/BLOCK
+  - sh: "export | grep refs"
   - pip install "."
 
 
