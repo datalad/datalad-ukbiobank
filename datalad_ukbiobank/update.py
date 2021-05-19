@@ -287,24 +287,35 @@ class Update(Interface):
             ds.save(message="Update BIDS layout")
 
         if drop:
+            # None by default to serve as indicator whether we actually want to
+            # drop, after checks below
+            drop_opts = None
             if drop == 'archives':
                 # we need to force the drop, because the download is the
                 # only copy we have in general
                 drop_opts = ['--force', '--branch', 'incoming', '-I', '*.zip']
-            else:  # drop == 'extracted':
+            # drop == 'extracted':
+            # we would need to drop from the 'archived' special remote. however
+            # only if there ever were any archives added we have such a special
+            # remote. hence we need to check for existence to avoid a crash
+            # https://github.com/datalad/datalad-ukbiobank/issues/69
+            elif 'datalad-archives' in [
+                    r.get('name') for r in repo.get_special_remotes().values()]:
                 drop_opts=['--in', 'datalad-archives',
                            '--branch', 'incoming-native']
 
-            for rec in repo.call_annex_records(['drop'] + drop_opts):
-                if not rec.get('success', False):
-                    yield dict(
-                        action='drop',
-                        status='error',
-                        message=rec.get('note', 'could not drop key'),
-                        key=rec.get('key', None),
-                        type='key',
-                        path=ds.path,
-                    )
+            # only if we found drop actually necessary
+            if drop_opts:
+                for rec in repo.call_annex_records(['drop'] + drop_opts):
+                    if not rec.get('success', False):
+                        yield dict(
+                            action='drop',
+                            status='error',
+                            message=rec.get('note', 'could not drop key'),
+                            key=rec.get('key', None),
+                            type='key',
+                            path=ds.path,
+                        )
 
         if not merge:
             return
