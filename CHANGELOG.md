@@ -1,3 +1,12 @@
+0.3.3 (May 19, 2021) -- drop fix
+
+- Fixes
+
+  - check whether there is a `datalad-archives` special remote,
+    before attempting to drop from it. Before, the `ukb-update`
+    would crash for datatype collections that do not contain
+    any archive. gh-69
+
 0.3.2 (Mar 23, 2021) -- docs!
 
 - Major documentation update: concepts, procedures, commands
