@@ -42,7 +42,9 @@
 
 
 # make repository clone cheap
-shallow_clone: true
+# nope, versioneer cannot handle it (yet)
+# https://github.com/python-versioneer/python-versioneer/issues/252
+shallow_clone: false
 
 
 environment:
