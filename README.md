@@ -38,6 +38,11 @@ a dedicated [virtualenv](https://virtualenv.pypa.io):
     # install from PyPi
     pip install datalad_ukbiobank
 
+You will also need to install the ukbb fecther utility `ukbfetch`, you can find relevant instructions [there](https://biobank.ndph.ox.ac.uk/ukb/download.cgi?id=500&ty=ut).
+
+> Note:
+> If you already have downloaded the data, you don't need to install `ukbfetch`, follow the section on [how to use with pre-downloaded data](## Use with pre-downloaded data).
+
 ## Use
 
 To track UKB data for a single participant (example ID: 1234), start by
@@ -80,6 +85,10 @@ Re-download can be avoided (while maintaining all other functionality), if the
 where they have been downloaded to. An example script is provided at
 `tools/ukbfetch_surrogate.sh`.
 
+One simple way to use this script is to add a symlink at `~/env/datalad/bin/` for example:
+```
+ln -s tools/ukbfetch_surrogate.sh ~/env/datalad/bin/ukbfetch`
+```
 
 ## Use on non-UNIX-like operating systems
 
