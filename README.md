@@ -42,9 +42,6 @@ You will also need to download the `ukbfetch` utility provided by the UK
 Biobank. See the [ukbfetch documentation](https://biobank.ctsu.ox.ac.uk/showcase/refer.cgi?id=644)
 for specifics.
 
-> Note:
-> If you already have downloaded the data, you don't need to install `ukbfetch`, follow the section on [how to use with pre-downloaded data](## Use with pre-downloaded data).
-
 ## Use
 
 To track UKB data for a single participant (example ID: 1234), start by
