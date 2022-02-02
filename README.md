@@ -38,7 +38,9 @@ a dedicated [virtualenv](https://virtualenv.pypa.io):
     # install from PyPi
     pip install datalad_ukbiobank
 
-You will also need to install the ukbb fecther utility `ukbfetch`, you can find relevant instructions [there](https://biobank.ndph.ox.ac.uk/ukb/download.cgi?id=500&ty=ut).
+You will also need to download the `ukbfetch` utility provided by the UK
+Biobank. See the [ukbfetch documentation](https://biobank.ctsu.ox.ac.uk/showcase/refer.cgi?id=644)
+for specifics.
 
 > Note:
 > If you already have downloaded the data, you don't need to install `ukbfetch`, follow the section on [how to use with pre-downloaded data](## Use with pre-downloaded data).
