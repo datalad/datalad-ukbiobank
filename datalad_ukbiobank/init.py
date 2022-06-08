@@ -152,10 +152,13 @@ class Init(Interface):
             )
         )
         # inherit the standard attributes to ensure uniform behavior
-        # across branches
+        # across branches. We need to ensure a newline character due to
+        # https://github.com/datalad/datalad-ukbiobank/issues/82
         (repo.pathobj / '.gitattributes').write_text(
-            repo.call_git(
-                ['cat-file', '-p', '{}:.gitattributes'.format(main_branch)]))
+            _ensure_endswith(
+                repo.call_git(['cat-file', '-p', '{}:.gitattributes'.format(main_branch)]),
+                '\n')
+        )
         # save to incoming branch, provide path to avoid adding untracked
         # content
         ds.save(
@@ -208,7 +211,15 @@ def _add_incoming_branch(name, incoming_branches, repo, batchfile):
             files=['.ukbbatch'],
             msg="Do not leak ukbfetch configuration into dataset content")
     # inherit the standard attributes to ensure uniform behavior
-    # across branches
+    # across branches. We need to ensure a newline character due to
+    # https://github.com/datalad/datalad-ukbiobank/issues/82
     (repo.pathobj / '.gitattributes').write_text(
-        repo.call_git(['cat-file', '-p', 'incoming:.gitattributes']))
+        _ensure_endswith(
+            repo.call_git(['cat-file', '-p', 'incoming:.gitattributes']),
+            '\n')
+    )
     repo.save(message='Apply standard Git attributes', paths=['.gitattributes'])
+
+
+def _ensure_endswith(s: str, ending: str):
+    return s if s.endswith(ending) else s + ending
