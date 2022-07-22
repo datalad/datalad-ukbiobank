@@ -1,8 +1,5 @@
 from zipfile import ZipFile
 
-from datalad.tests.utils import (
-    with_tempfile,
-)
 from datalad.utils import Path
 
 

@@ -1,6 +1,4 @@
 # requirements for a development environment
-nose
-coverage
+-e .[devel]
 sphinx
 sphinx_rtd_theme
-mock

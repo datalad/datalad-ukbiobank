@@ -6,7 +6,7 @@ from datalad.api import (
     create,
     clone,
 )
-from datalad.tests.utils import (
+from datalad.tests.utils_pytest import (
     assert_in,
     assert_in_results,
     assert_not_in,
@@ -57,7 +57,7 @@ def make_ukbfetch(ds, records):
 @with_tempfile
 @with_tempfile(mkdir=True)
 @with_tempfile(mkdir=True)
-def test_base(dspath, records, clonedir):
+def test_base(dspath=None, records=None, clonedir=None):
     # make fake UKB datarecord downloads
     make_datarecord_zips('12345', records)
 
@@ -124,7 +124,7 @@ def test_base(dspath, records, clonedir):
 @skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
-def test_bids(dspath, records):
+def test_bids(dspath=None, records=None):
     # make fake UKB datarecord downloads
     make_datarecord_zips('12345', records)
 
@@ -180,7 +180,7 @@ def test_bids(dspath, records):
 @skip_if_on_windows  # see gh-61
 @with_tempfile
 @with_tempfile(mkdir=True)
-def test_drop(dspath, records):
+def test_drop(dspath=None, records=None):
     make_datarecord_zips('12345', records)
     ds = create(dspath)
     ds.ukb_init(
