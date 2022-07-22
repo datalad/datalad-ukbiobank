@@ -197,8 +197,7 @@ class Update(Interface):
         repo.call_git(['merge', 'incoming', '--strategy=ours'])
 
         for fp in repo.get_content_info(
-                ref='incoming-native',
-                eval_file_type=False):
+			ref='incoming-native'):
             if fp.name.startswith('.git') \
                     or fp.name.startswith('.datalad') \
                     or fp.name.startswith('.ukb'):
