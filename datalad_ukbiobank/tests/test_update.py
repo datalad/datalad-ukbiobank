@@ -21,6 +21,10 @@ from datalad_ukbiobank.tests import (
     make_datarecord_zips,
 )
 
+ckwa = dict(
+    result_renderer='disabled',
+)
+
 
 # code of a fake ukbfetch drop-in
 ukbfetch_code = """\
@@ -62,10 +66,10 @@ def test_base(dspath=None, records=None, clonedir=None):
     make_datarecord_zips('12345', records)
 
     # init dataset
-    ds = create(dspath)
+    ds = create(dspath, **ckwa)
     ds.ukb_init(
         '12345',
-        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'])
+        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
     # dummy key file, no needed to bypass tests
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
 
@@ -74,7 +78,7 @@ def test_base(dspath=None, records=None, clonedir=None):
 
     # refuse to operate on dirty datasets
     (ds.pathobj / 'dirt').write_text('dust')
-    assert_status('error', ds.ukb_update(on_failure='ignore'))
+    assert_status('error', ds.ukb_update(on_failure='ignore', **ckwa))
     (ds.pathobj / 'dirt').unlink()
 
     # meaningful crash with no ukbfetch
@@ -84,7 +88,7 @@ def test_base(dspath=None, records=None, clonedir=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True)
+        ds.ukb_update(merge=True, **ckwa)
 
     # get expected file layout
     incoming = ds.repo.get_files('incoming')
@@ -101,14 +105,14 @@ def test_base(dspath=None, records=None, clonedir=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True)
+        ds.ukb_update(merge=True, **ckwa)
 
-    cloned = clone(source=ds.path, path=clonedir)
+    cloned = clone(source=ds.path, path=clonedir, **ckwa)
     cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        cloned.ukb_update(merge=True)
+        cloned.ukb_update(merge=True, **ckwa)
 
     # rightfully refuse to merge when active branch is an incoming* one
     ds.repo.checkout('incoming')
@@ -116,7 +120,7 @@ def test_base(dspath=None, records=None, clonedir=None):
             str(bin_dir),
             os.environ['PATH'])}):
         assert_in_results(
-            ds.ukb_update(merge=True, force=True, on_failure='ignore'),
+            ds.ukb_update(merge=True, force=True, on_failure='ignore', **ckwa),
             status='impossible',
             message='Refuse to merge into incoming* branch',)
 
@@ -129,11 +133,11 @@ def test_bids(dspath=None, records=None):
     make_datarecord_zips('12345', records)
 
     # init dataset
-    ds = create(dspath)
+    ds = create(dspath, **ckwa)
     ds.ukb_init(
         '12345',
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'],
-        bids=True)
+        bids=True, **ckwa)
     # dummy key file, no needed to bypass tests
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
     bin_dir = make_ukbfetch(ds, records)
@@ -142,7 +146,7 @@ def test_bids(dspath=None, records=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True)
+        ds.ukb_update(merge=True, **ckwa)
 
     bids_files = ds.repo.get_files('incoming-bids')
     master_files = ds.repo.get_files()
@@ -157,7 +161,7 @@ def test_bids(dspath=None, records=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force=True)
+        ds.ukb_update(merge=True, force=True, **ckwa)
 
     bids_files = ds.repo.get_files('incoming-bids')
     master_files = ds.repo.get_files()
@@ -170,11 +174,11 @@ def test_bids(dspath=None, records=None):
 
     # now re-init with a different record subset and rerun
     ds.ukb_init('12345', ['25747_2_0', '25748_2_0', '25748_3_0'],
-                bids=True, force=True)
+                bids=True, force=True, **ckwa)
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force=True)
+        ds.ukb_update(merge=True, force=True, **ckwa)
 
 
 @skip_if_on_windows  # see gh-61
@@ -182,10 +186,10 @@ def test_bids(dspath=None, records=None):
 @with_tempfile(mkdir=True)
 def test_drop(dspath=None, records=None):
     make_datarecord_zips('12345', records)
-    ds = create(dspath)
+    ds = create(dspath, **ckwa)
     ds.ukb_init(
         '12345',
-        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'])
+        ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
     ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
     bin_dir = make_ukbfetch(ds, records)
 
@@ -193,7 +197,7 @@ def test_drop(dspath=None, records=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force=True)
+        ds.ukb_update(merge=True, force=True, **ckwa)
     zips_in_ds = list(ds.pathobj.glob('**/*.zip'))
     neq_(zips_in_ds, [])
 
@@ -201,19 +205,19 @@ def test_drop(dspath=None, records=None):
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force=True, drop='archives')
+        ds.ukb_update(merge=True, force=True, drop='archives', **ckwa)
     # no ZIPs can be found, also not in the annex
     eq_(list(ds.pathobj.glob('**/*.zip')), [])
     # we can get all we want (or rather still have it)
-    assert_status('notneeded', ds.get('.'))
+    assert_status('notneeded', ds.get('.', **ckwa))
 
     # now drop extracted content instead
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
-        ds.ukb_update(merge=True, force=True, drop='extracted')
+        ds.ukb_update(merge=True, force=True, drop='extracted', **ckwa)
     eq_(list(ds.pathobj.glob('**/*.zip')), zips_in_ds)
     # we can get all
-    assert_status('ok', ds.get('.'))
+    assert_status('ok', ds.get('.', **ckwa))
     # a non-zip content file is still around
     eq_((ds.pathobj / '25747_2_0.adv').read_text(), '25747_2_0.adv')
