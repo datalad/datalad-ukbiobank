@@ -11,11 +11,15 @@ from datalad.tests.utils_pytest import (
     with_tempfile,
 )
 
+ckwa = dict(
+    result_renderer='disabled',
+)
+
 
 @with_tempfile
 def test_base(path=None):
-    ds = create(path)
-    ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'])
+    ds = create(path, **ckwa)
+    ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'], **ckwa)
     # standard branch setup
     assert_true(all(
         b in sorted(ds.repo.get_branches())
@@ -35,9 +39,9 @@ def test_base(path=None):
     # no re-init without force
     assert_status(
         'error',
-        ds.ukb_init('12', ['12', '23'], on_failure='ignore'))
+        ds.ukb_init('12', ['12', '23'], on_failure='ignore', **ckwa))
 
-    ds.ukb_init('12345', ['20250_2_0'], force=True)
+    ds.ukb_init('12345', ['20250_2_0'], force=True, **ckwa)
     eq_(ds.repo.call_git(['cat-file', '-p', 'incoming:.ukbbatch']),
         '12345 20250_2_0\n')
 
@@ -46,7 +50,7 @@ def test_base(path=None):
 def test_bids(path=None):
     ds = create(path)
     ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'],
-                bids=True)
+                bids=True, **ckwa)
     # standard branch setup
     assert_true(all(
         b in sorted(ds.repo.get_branches())
@@ -62,7 +66,7 @@ def test_bids(path=None):
     assert_not_in('ukbbatch', ds.repo.call_git(['ls-tree', DEFAULT_BRANCH]))
 
     # smoke test for a reinit
-    ds.ukb_init('12345', ['20250_2_0'], bids=True, force=True)
+    ds.ukb_init('12345', ['20250_2_0'], bids=True, force=True, **ckwa)
     assert_true(all(
         b in sorted(ds.repo.get_branches())
         for b in ['git-annex', 'incoming', 'incoming-native',
