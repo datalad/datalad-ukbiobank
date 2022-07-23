@@ -1,3 +1,13 @@
+0.3.4 (Jul 23, 2021) -- pytest with little bits and pieces
+
+- The documentation was extended with information on the
+  `ukbfetch` dependency, and on `ukbfetch_surrogate`.
+
+- Various bits of the code have been adjusted for changes in
+  DataLad (with no implied change of functionality).
+
+- The test battery has been ported to `pytest` (95% coverage).
+
 0.3.3 (May 19, 2021) -- drop fix
 
 - Fixes
