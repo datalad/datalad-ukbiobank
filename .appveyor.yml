@@ -65,7 +65,7 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
       INSTALL_SYSPKGS: python3-virtualenv
       CODECOV_BINARY: https://uploader.codecov.io/latest/linux/codecov
-      INSTALL_GITANNEX: git-annex -m deb-url --url http://snapshot.debian.org/archive/debian/20201228T023115Z/pool/main/g/git-annex/git-annex_8.20201127-1_amd64.deb
+      INSTALL_GITANNEX: git-annex=10.20220525 -m datalad/git-annex:release
       # system git-annex is way too old, use better one
     # Windows core tests
     - ID: WinP38
@@ -73,13 +73,13 @@ environment:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       # Python version specification is non-standard on windows
       PY: 38-x64
-      INSTALL_GITANNEX: git-annex -m datalad/packages
+      INSTALL_GITANNEX: git-annex=10.20220525 -m datalad/git-annex:release
     # MacOS core tests
     - ID: MacP38
       DTS: datalad_ukbiobank
       APPVEYOR_BUILD_WORKER_IMAGE: macOS
       PY: 3.8
-      INSTALL_GITANNEX: git-annex
+      INSTALL_GITANNEX: git-annex=10.20220525 -m datalad/git-annex:release
       DATALAD_LOCATIONS_SOCKETS: /Users/appveyor/DLTMP/sockets
       CODECOV_BINARY: https://uploader.codecov.io/latest/macos/codecov
 
@@ -148,7 +148,11 @@ install:
   # Install git-annex on windows, otherwise INSTALL_SYSPKGS can be used
   # deploy git-annex, if desired
   - cmd: IF DEFINED INSTALL_GITANNEX datalad-installer --sudo ok %INSTALL_GITANNEX%
-  - sh: "[ -n \"${INSTALL_GITANNEX}\" ] && datalad-installer --sudo ok ${INSTALL_GITANNEX}"
+  # in case of a snapshot installation, use the following approach to adjust
+  # the PATH as necessary
+  - sh: "[ -n \"${INSTALL_GITANNEX}\" ] && datalad-installer -E ${HOME}/dlinstaller_env.sh --sudo ok ${INSTALL_GITANNEX}"
+  # add location of datalad installer results to PATH
+  - sh: "[ -f ${HOME}/dlinstaller_env.sh ] && . ${HOME}/dlinstaller_env.sh || true"
 
 
 #before_build:
@@ -156,8 +160,8 @@ install:
 
 
 build_script:
-  - pip install -r requirements-devel.txt
-  - pip install "."
+  - python -m pip install -r requirements-devel.txt
+  - python -m pip install .
 
 
 #after_build:
@@ -173,9 +177,8 @@ test_script:
   - cmd: md __testhome__
   - sh: mkdir __testhome__
   - cd __testhome__
-    # run test selecion (--traverse-namespace needed from Python 3.8 onwards)
-  - cmd: python -m nose --traverse-namespace -s -v -A "not (turtle)" --with-cov --cover-package datalad_ukbiobank %DTS%
-  - sh:  python -m nose --traverse-namespace -s -v -A "not (turtle)" --with-cov --cover-package datalad_ukbiobank ${DTS}
+  - cmd: python -m pytest -s -v -m "not (turtle)" --cov=datalad_ukbiobank --pyargs %DTS%
+  - sh:  python -m pytest -s -v -m "not (turtle)" --cov=datalad_ukbiobank --pyargs ${DTS}
 
 
 after_test:

@@ -2,7 +2,7 @@ from datalad.api import (
     create,
     ukb_init,
 )
-from datalad.tests.utils import (
+from datalad.tests.utils_pytest import (
     assert_not_in,
     assert_status,
     assert_true,
@@ -13,7 +13,7 @@ from datalad.tests.utils import (
 
 
 @with_tempfile
-def test_base(path):
+def test_base(path=None):
     ds = create(path)
     ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'])
     # standard branch setup
@@ -43,7 +43,7 @@ def test_base(path):
 
 
 @with_tempfile
-def test_bids(path):
+def test_bids(path=None):
     ds = create(path)
     ds.ukb_init('12345', ['20249_2_0', '20249_3_0', '20250_2_0'],
                 bids=True)
