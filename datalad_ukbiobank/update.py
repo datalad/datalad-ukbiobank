@@ -17,7 +17,7 @@ import shutil
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
-from datalad.interface.add_archive_content import AddArchiveContent
+from datalad.local.add_archive_content import AddArchiveContent
 from datalad.support.constraints import (
     EnsureChoice,
     EnsureStr,
@@ -229,7 +229,7 @@ class Update(Interface):
                     AddArchiveContent.__call__(
                         props['key'],
                         key=True,
-                        annex=repo,
+                        dataset=ds,
                         # --use-current-dir due to
                         # https://github.com/datalad/datalad/issues/3995
                         use_current_dir=True,

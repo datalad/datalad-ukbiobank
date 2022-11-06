@@ -42,7 +42,6 @@ def restructure_ukb2bids(ds, subid, unrecognized_dir, base_path=None):
             annex=None,
             untracked='all',
             eval_subdataset_state='no',
-            report_filetype='raw',
             return_type='generator',
             result_renderer=None):
         path = Path(fp['path'])

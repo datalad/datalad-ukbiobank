@@ -71,7 +71,7 @@ def test_base(dspath=None, records=None, clonedir=None):
         '12345',
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
     # dummy key file, no needed to bypass tests
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
 
     # fake ukbfetch
     bin_dir = make_ukbfetch(ds, records)
@@ -108,7 +108,7 @@ def test_base(dspath=None, records=None, clonedir=None):
         ds.ukb_update(merge=True, **ckwa)
 
     cloned = clone(source=ds.path, path=clonedir, **ckwa)
-    cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
@@ -139,7 +139,7 @@ def test_bids(dspath=None, records=None):
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'],
         bids=True, **ckwa)
     # dummy key file, no needed to bypass tests
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     bin_dir = make_ukbfetch(ds, records)
 
     # put fake ukbfetch in the path and run
@@ -190,7 +190,7 @@ def test_drop(dspath=None, records=None):
     ds.ukb_init(
         '12345',
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     bin_dir = make_ukbfetch(ds, records)
 
     # baseline
@@ -208,16 +208,18 @@ def test_drop(dspath=None, records=None):
         ds.ukb_update(merge=True, force=True, drop='archives', **ckwa)
     # no ZIPs can be found, also not in the annex
     eq_(list(ds.pathobj.glob('**/*.zip')), [])
-    # we can get all we want (or rather still have it)
-    assert_status('notneeded', ds.get('.', **ckwa))
 
     # now drop extracted content instead
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
         ds.ukb_update(merge=True, force=True, drop='extracted', **ckwa)
+    test_extractfile = ds.pathobj / '20227_2_0' / 'fMRI' / 'rfMRI.nii.gz'
+    # test file is gone
+    assert not test_extractfile.exists()
     eq_(list(ds.pathobj.glob('**/*.zip')), zips_in_ds)
     # we can get all
     assert_status('ok', ds.get('.', **ckwa))
+    eq_(test_extractfile.read_text(), 'rfMRI.nii.gz')
     # a non-zip content file is still around
     eq_((ds.pathobj / '25747_2_0.adv').read_text(), '25747_2_0.adv')
