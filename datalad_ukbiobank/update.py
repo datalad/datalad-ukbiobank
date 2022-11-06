@@ -229,7 +229,7 @@ class Update(Interface):
                     AddArchiveContent.__call__(
                         props['key'],
                         key=True,
-                        annex=repo,
+                        dataset=ds,
                         # --use-current-dir due to
                         # https://github.com/datalad/datalad/issues/3995
                         use_current_dir=True,
