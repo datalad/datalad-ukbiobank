@@ -1,3 +1,10 @@
+0.3.5 (Nov 06, 2022) -- modernized
+
+- Various updates coping with API deprecations in DataLad.
+
+- Robustified test suite that is more independent of datalad's
+  specific (but also inconsequential) result reporting behavior.
+
 0.3.4 (Jul 23, 2021) -- pytest with little bits and pieces
 
 - The documentation was extended with information on the
