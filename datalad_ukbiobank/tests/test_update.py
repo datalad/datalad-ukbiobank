@@ -71,7 +71,7 @@ def test_base(dspath=None, records=None, clonedir=None):
         '12345',
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
     # dummy key file, no needed to bypass tests
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
 
     # fake ukbfetch
     bin_dir = make_ukbfetch(ds, records)
@@ -108,7 +108,7 @@ def test_base(dspath=None, records=None, clonedir=None):
         ds.ukb_update(merge=True, **ckwa)
 
     cloned = clone(source=ds.path, path=clonedir, **ckwa)
-    cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    cloned.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
@@ -139,7 +139,7 @@ def test_bids(dspath=None, records=None):
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'],
         bids=True, **ckwa)
     # dummy key file, no needed to bypass tests
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     bin_dir = make_ukbfetch(ds, records)
 
     # put fake ukbfetch in the path and run
@@ -190,7 +190,7 @@ def test_drop(dspath=None, records=None):
     ds.ukb_init(
         '12345',
         ['20227_2_0', '25747_2_0', '25748_2_0', '25748_3_0'], **ckwa)
-    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', where='local')
+    ds.config.add('datalad.ukbiobank.keyfile', 'dummy', scope='local')
     bin_dir = make_ukbfetch(ds, records)
 
     # baseline
