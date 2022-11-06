@@ -208,16 +208,18 @@ def test_drop(dspath=None, records=None):
         ds.ukb_update(merge=True, force=True, drop='archives', **ckwa)
     # no ZIPs can be found, also not in the annex
     eq_(list(ds.pathobj.glob('**/*.zip')), [])
-    # we can get all we want (or rather still have it)
-    assert_status('notneeded', ds.get('.', **ckwa))
 
     # now drop extracted content instead
     with patch.dict('os.environ', {'PATH': '{}:{}'.format(
             str(bin_dir),
             os.environ['PATH'])}):
         ds.ukb_update(merge=True, force=True, drop='extracted', **ckwa)
+    test_extractfile = ds.pathobj / '20227_2_0' / 'fMRI' / 'rfMRI.nii.gz'
+    # test file is gone
+    assert not test_extractfile.exists()
     eq_(list(ds.pathobj.glob('**/*.zip')), zips_in_ds)
     # we can get all
     assert_status('ok', ds.get('.', **ckwa))
+    eq_(test_extractfile.read_text(), 'rfMRI.nii.gz')
     # a non-zip content file is still around
     eq_((ds.pathobj / '25747_2_0.adv').read_text(), '25747_2_0.adv')
