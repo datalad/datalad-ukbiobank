@@ -17,7 +17,7 @@ import shutil
 from datalad.interface.base import Interface
 from datalad.interface.utils import eval_results
 from datalad.interface.base import build_doc
-from datalad.interface.add_archive_content import AddArchiveContent
+from datalad.local.add_archive_content import AddArchiveContent
 from datalad.support.constraints import (
     EnsureChoice,
     EnsureStr,
