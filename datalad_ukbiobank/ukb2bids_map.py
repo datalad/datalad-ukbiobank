@@ -16,6 +16,7 @@ ukb2bids = {
 '20251_0/SWI': '{unrecogdir}/SWI/',
 '20227_0/fMRI': '{unrecogdir}/fMRI/',
 '20249_0/fMRI': '{unrecogdir}/fMRI/',
+'20263_0/FreeSurfer': '{unrecogdir}/FreeSurfer/',
 '25747_0': '{unrecogdir}/fMRI/sub-{subj}_{session}_task-hariri_eprime',
 '25748_0': '{unrecogdir}/fMRI/sub-{subj}_{session}_task-hariri_eprime',
 '25749_0': '{unrecogdir}/fMRI/sub-{subj}_{session}_task-hariri_eprime',
